@@ -1,9 +1,20 @@
 PMR2 VirtualBox Image generator
 ===============================
 
-Instead of just providing documentation on how to buidl the whole thing,
-it would be useful to also have a working script that will build the
-whole thing.  Following was the original documentation done for Gentoo.
+While there are independent instructions on how to put together the
+complete PMR2 stack from scratch on running hardware, they are scattered
+around the independent parts that compose the entire system.  While the
+buildout does build the core completely, it however does not ensure the
+rest of the operating system is at a state where this can even work, nor
+does it touch upon the installation and setup of the additional backends
+that the production instance now uses.
+
+Instead of just providing documentation on how to build the whole thing,
+having a script that does it all inside a virtual machine will serve the
+purpose much better.  Not to mention that the result can be deployed as
+a working instance either locally or onto a cloud computing platform.
+The script was constructed based on documentation that was originally
+done on top of Gentoo.
 
 Do note that this relies on
 `vboxtools <https://github.com/metatoaster/vboxtools>`_.  Documentation
