@@ -25,6 +25,7 @@ EOF
 
 emerge --sync pmr2-overlay
 emerge --noreplace net-misc/omniORB dev-util/cmake dev-db/unixODBC \
+    media-libs/mesa media-libs/glu \
     dev-python/cffi media-libs/openjpeg media-libs/libjpeg-turbo \
     dev-python/virtualenv \
     dev-db/virtuoso-odbc::pmr2-overlay \
