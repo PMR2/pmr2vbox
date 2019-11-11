@@ -1,41 +1,45 @@
 POSTGRESQL_VERSION=11
+PHYSIOME_USER=physiome
 
-mkdir /etc/portage/package.accept_keywords
+mkdir -p /etc/portage/package.accept_keywords
 
 cat << EOF > /etc/portage/package.accept_keywords/yarn
 sys-apps/yarn ~amd64
 EOF
 
-
 cat << EOF > /etc/portage/package.use/physiome_submission
 dev-db/postgresql uuid
 EOF
 
-
 emerge --noreplace \
     net-libs/nodejs \
     sys-apps/yarn \
+    app-emulation/docker \
     dev-db/postgresql:${POSTGRESQL_VERSION} \
 
 npm install node-gyp -g
 
+# TODO check each thing individually and not make assumptions for the
+# kernel options required for docker
+if ! zcat /proc/config.gz | grep -P "CONFIG_IP_NF_NAT=(m|y)" > /dev/null 2>&1; then
+    cat >> /usr/src/linux/.config <<- EOF
+	CONFIG_IP_NF_TARGET_MASQUERADE=m
+	CONFIG_IP_NF_NAT=m
+	CONFIG_CGROUP_PIDS=y
+	CONFIG_CGROUP_HUGETLB=y
+	CONFIG_NET_L3_MASTER_DEV=y
+	CONFIG_IPVLAN=m
+	CONFIG_CGROUP_NET_PRIO=y
+	CONFIG_OVERLAY_FS=m
+	CONFIG_NETFILTER_ADVANCED=y
+	CONFIG_IP_NF_TARGET_REDIRECT=m
+	EOF
+    genkernel --oldconfig --no-zfs --no-btrfs all
+fi
 
-# TODO add the following configuration to kernel to enable docker
-
-# CONFIG_IP_NF_TARGET_MASQUERADE=m
-# CONFIG_IP_NF_NAT=m  
-# CONFIG_CGROUP_PIDS=y
-# CONFIG_CGROUP_HUGETLB=y
-# CONFIG_NET_L3_MASTER_DEV=y
-# CONFIG_IPVLAN=m
-# CONFIG_CGROUP_NET_PRIO=y 
-# CONFIG_OVERLAY_FS=m
-
-# CONFIG_NETFILTER_ADVANCED=y
-# CONFIG_IP_NF_TARGET_REDIRECT=m
-
-
-useradd -m -k /etc/skel/ physiome
+if ! id -u ${PHYSIOME_USER} > /dev/null 2>&1; then
+    useradd -m -k /etc/skel/ ${PHYSIOME_USER}
+fi
 
 POSTGRES_DATA_DIR=/var/lib/postgresql/${POSTGRESQL_VERSION}/data
 if [ ! -d "${POSTGRES_DATA_DIR}" ]; then
@@ -60,20 +64,28 @@ psql -U postgres -d physiome << EOF
     CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 EOF
 
-
-# TODO rules to emerge docker and then run
-# docker run -d --name physiome-camunda -p 8080:8080 camunda/camunda-bpm-platform:latest
-
+# TODO figure out how to ensure that this instance starts when the
+# physiome-coko starts during runtime.
+/etc/init.d/docker start
+rc-update add docker default
+docker run -d --name physiome-camunda -p 8080:8080 camunda/camunda-bpm-platform:latest
 
 # TODO switch to physiome user
-git clone https://github.com/digital-science/physiome-coko.git
+su - ${PHYSIOME_USER} -c "/bin/bash" << EOF
+if [ ! -d "physiome-coko" ]; then
+    git clone https://github.com/digital-science/physiome-coko.git
+fi
+
 cd physiome-coko
 export NODE_ENV="development"
+
 yarn config set workspaces-experimental true
 yarn install --frozen-lockfile
 yarn cache clean
-
 yarn dsl-compile
 yarn desc
-
-yarn start
+EOF
+# don't do this - as this will run in the foreground
+# yarn start
+echo "Please set up the package/app/.env file manually"
+# TODO provide OpenRC init.d script for this daemon
