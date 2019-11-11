@@ -15,7 +15,40 @@ emerge --noreplace \
     net-libs/nodejs \
     sys-apps/yarn \
     app-emulation/docker \
+    app-crypt/certbot \
+    www-servers/apache \
     dev-db/postgresql:${POSTGRESQL_VERSION} \
+
+### Apache
+
+sed -i 's/^APACHE2_OPTS.*/APACHE2_OPTS="-D DEFAULT_VHOST -D INFO -D SSL -D SSL_DEFAULT_VHOST -D LANGUAGE -D PROXY"/' /etc/conf.d/apache2
+
+mkdir -p /var/log/apache2
+
+cat << EOF > /etc/apache2/vhosts.d/ssl_engine.include
+## SSL Engine Switch:
+# Enable/Disable SSL for this virtual host.
+SSLEngine on
+
+## SSLProtocol:
+# Don't use SSLv2 anymore as it's considered to be broken security-wise.
+# Also disable SSLv3 as most modern browsers are capable of TLS.
+SSLProtocol ALL -SSLv2 -SSLv3
+
+## SSL Cipher Suite:
+# List the ciphers that the client is permitted to negotiate.
+# See the mod_ssl documentation for a complete list.
+# This list of ciphers is recommended by mozilla and was stripped off
+# its RC4 ciphers. (bug #506924)
+SSLCipherSuite ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128:AES256:HIGH:!RC4:!aNULL:!eNULL:!EXPORT:!DES:!3DES:!MD5:!PSK
+
+## SSLHonorCipherOrder:
+# Prefer the server's cipher preference order as the client may have a
+# weak default order.
+SSLHonorCipherOrder On
+EOF
+
+### physiome-coko
 
 npm install node-gyp -g
 
