@@ -11,6 +11,12 @@ cat << EOF > /etc/portage/package.use/physiome_submission
 dev-db/postgresql uuid
 EOF
 
+if ! grep -P "APACHE2_MODULES.*proxy_wstunnel" /etc/portage/make.conf > /dev/null 2>&1; then
+    cat <<- EOF >> /etc/portage/make.conf
+	APACHE2_MODULES="\${APACHE2_MODULES} proxy_wstunnel"
+	EOF
+fi
+
 emerge --noreplace \
     net-libs/nodejs \
     sys-apps/yarn \
@@ -147,10 +153,16 @@ cat << EOF > /etc/apache2/vhosts.d/90_physiome_coko.conf
 #     SSLCertificateKeyFile /etc/letsencrypt/live/${HOST_FQDN}/privkey.pem
 #     SSLCertificateFile /etc/letsencrypt/live/${HOST_FQDN}/fullchain.pem
 #
+#     <FilesMatch "\.(ico|jpg|jpeg|png|gif|js|css|otf|ttf|woff|svg)$">
+#         Header set Cache-Control "max-age=604800, public"
+#     </FilesMatch>
+#
 #     SetOutputFilter DEFLATE
 #     SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png)$" no-gzip
 #
 #     RewriteEngine On
+#     RewriteCond %{HTTP:Upgrade} =websocket [NC]
+#     RewriteRule "/(.*)" "ws://127.0.0.1:3000/\$1" [P,L]
 #     RewriteCond %{REQUEST_URI} !^/\.well\-known/acme\-challenge/
 #     RewriteRule "^/(.*)" "http://127.0.0.1:3000/\$1" [P,L]
 # </VirtualHost>
