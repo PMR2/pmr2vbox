@@ -1,5 +1,6 @@
+#!/bin/sh
+
 POSTGRESQL_VERSION=11
-PHYSIOME_USER=physiome
 
 mkdir -p /etc/portage/package.accept_keywords
 
@@ -167,6 +168,20 @@ cat << EOF > /etc/apache2/vhosts.d/90_physiome_coko.conf
 #     RewriteRule "^/(.*)" "http://127.0.0.1:3000/\$1" [P,L]
 # </VirtualHost>
 EOF
+
+# Cronjob for certbot
+
+cat << EOF > /etc/cron.weekly/certbot
+#!/bin/sh
+set -e
+
+# Certificate must be issued first before it may be renewed
+# certbot certonly --webroot -w /var/www -d ${HOST_FQDN}
+
+certbot renew
+/etc/init.d/apache2 reload
+EOF
+chmod +x /etc/cron.weekly/certbot
 
 ### physiome-coko
 

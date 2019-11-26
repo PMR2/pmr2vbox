@@ -2,6 +2,9 @@
 # XXX this script assumes vboxtools has been used to "activate" a
 # VirtualBox control environment.
 
+export HOST_FQDN=${HOST_FQDN:-"dev.submit.physiomeproject.org"}
+export PHYSIOME_USER=${PHYSIOME_USER:="physiome"}
+
 set -e
 
 # static definitions
@@ -33,7 +36,7 @@ SSH_CMD /etc/init.d/net.eth1 start
 
 # install physiome-coko
 if [ ! -z "${PHYSIOME_COKO}" ]; then
-    envsubst "" < "${PHYSIOME_COKO}" | SSH_CMD
+    envsubst \$HOST_FQDN,\$PHYSIOME_USER < "${PHYSIOME_COKO}" | SSH_CMD
 fi
 
 # XXX make this cleanup run regardless.
