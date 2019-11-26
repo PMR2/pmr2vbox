@@ -71,6 +71,91 @@ SSLCipherSuite ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-R
 SSLHonorCipherOrder On
 EOF
 
+cat << EOF > /etc/apache2/vhosts.d/90_physiome_coko.conf
+<VirtualHost *:80>
+    ServerAdmin webmaster@localhost
+    ServerName ${HOST_FQDN}
+
+    DocumentRoot /var/www
+
+    <Directory />
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride None
+        Order allow,deny
+        allow from all
+    </Directory>
+
+    ErrorLog /var/log/apache2/${HOST_FQDN}.error.log
+
+    # Possible values include: debug, info, notice, warn, error, crit,
+    # alert, emerg.
+    LogLevel warn
+
+    CustomLog /var/log/apache2/${HOST_FQDN}.access.log combined
+    ProxyPass /.well-known !
+    Alias /.well-known "/var/www/.well-known"
+    <Directory "/var/www/.well-known">
+        Require all granted
+        AllowOverride All
+        AddDefaultCharset Off
+        Header set Content-Type "text/plain"
+    </Directory>
+
+    SetOutputFilter DEFLATE
+    SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png)$" no-gzip
+
+    # de-chunk the chunked encoding for ZServer (forces Apache to buffer
+    # the entire thing by forcing a Content-Length header).
+    SetEnv proxy-sendcl 1
+
+    Redirect permanent / https://${HOST_FQDN}/
+
+</VirtualHost>
+
+# # Uncomment after Let's Encrypt certificates are installed.
+# <VirtualHost *:443>
+#     ServerAdmin webmaster@localhost
+#     ServerName ${HOST_FQDN}
+#
+#     DocumentRoot /var/www
+#
+#     <Directory />
+#         Options Indexes FollowSymLinks MultiViews
+#         AllowOverride None
+#         Order allow,deny
+#         allow from all
+#     </Directory>
+#
+#     Alias /.well-known "/var/www/.well-known"
+#     <Directory "/var/www/.well-known">
+#         Require all granted
+#         AllowOverride All
+#         AddDefaultCharset Off
+#         Header set Content-Type "text/plain"
+#     </Directory>
+#
+#     ErrorLog /var/log/apache2/${HOST_FQDN}-ssl.error.log
+#
+#     # Possible values include: debug, info, notice, warn, error, crit,
+#     # alert, emerg.
+#     LogLevel warn
+#
+#     CustomLog /var/log/apache2/${HOST_FQDN}-ssl.access.log combined
+#
+#     Include /etc/apache2/vhosts.d/ssl_engine.include
+#
+#     SSLCertificateKeyFile /etc/letsencrypt/live/${HOST_FQDN}/privkey.pem
+#     SSLCertificateFile /etc/letsencrypt/live/${HOST_FQDN}/fullchain.pem
+#
+#     SetOutputFilter DEFLATE
+#     SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png)$" no-gzip
+#
+#     RewriteEngine On
+#     RewriteCond %{REQUEST_URI} !^/\.well\-known/acme\-challenge/
+#     RewriteRule "^/(.*)" "http://127.0.0.1:3000/\$1" [P,L]
+# </VirtualHost>
+EOF
+
 ### physiome-coko
 
 npm install node-gyp -g
