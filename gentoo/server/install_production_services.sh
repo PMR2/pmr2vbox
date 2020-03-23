@@ -121,6 +121,7 @@ cat << EOF > /etc/apache2/vhosts.d/90_${BUILDOUT_NAME}.conf
 #
 #     SetOutputFilter DEFLATE
 #     SetEnvIfNoCase Request_URI "\\.(?:gif|jpe?g|png)$" no-gzip
+#     SetEnv proxy-sendcl 1
 #
 #     RewriteEngine On
 #     RewriteCond %{REQUEST_URI} !^/\\.well\\-known/acme\\-challenge/
