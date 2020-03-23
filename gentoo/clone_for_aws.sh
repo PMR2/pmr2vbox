@@ -35,7 +35,7 @@ rsync -raAHX \\
     --include=/var/log/{apache,tomcat}*/ \\
     --include=/var/tmp/tomcat*/ \\
     --exclude=/etc/ssh/ssh_host* \\
-    --exclude=/{root,proc,sys,dev,mnt,usr/src,usr/portage,usr/local/portage,tmp,var/tmp,var/log,var/log/{apache,tomcat}*,var/lib/portage/distfiles,var/lib/portage/packages}/* \\
+    --exclude=/{root,proc,sys,dev,mnt,usr/src,usr/portage,usr/local/portage,tmp,var/tmp,var/log,var/log/{apache,tomcat}*,var/lib/portage/distfiles,var/lib/portage/packages,var/cache/{binpkgs,distfiles},var/db/repos}/* \\
     / /mnt/gentoo/
 mount -t proc proc /mnt/gentoo/proc
 mount -R /dev /mnt/gentoo/dev

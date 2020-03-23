@@ -8,7 +8,7 @@ mkdir -p /etc/portage/repos.conf
 
 cat << EOF > /etc/portage/repos.conf/pmr2-overlay.conf
 [pmr2-overlay]
-location = /usr/local/portage/pmr2-overlay
+location = /var/db/repos/pmr2-overlay
 sync-type = git
 sync-uri = https://github.com/PMR2/portage.git
 priority = 50
@@ -19,6 +19,15 @@ cat << EOF > /etc/portage/package.use/pmr2
 # required by dev-db/virtuoso-server-6.1.6::pmr2-overlay
 # required by dev-db/virtuoso-server::pmr2-overlay (argument)
 sys-libs/zlib minizip
+# omniORB
+net-misc/omniORB python_single_target_python2_7 -python_single_target_python3_6 -python_single_target_python3_7
+EOF
+
+mkdir -p /etc/portage/package.accept_keywords
+
+cat << EOF > /etc/portage/package.accept_keywords/pmr2
+# omniORB
+net-misc/omniORB ~amd64
 EOF
 
 # Installing build and installation dependencies plus Virtuoso
