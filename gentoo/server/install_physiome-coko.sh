@@ -251,7 +251,7 @@ docker run -d --name physiome-camunda -p 8080:8080 \
 # TODO switch to physiome user
 su - ${PHYSIOME_USER} -c "/bin/bash" << EOF
 if [ ! -d "physiome-coko" ]; then
-    git clone https://github.com/digital-science/physiome-coko.git
+    git clone https://github.com/Physiome/physiome-coko.git
 fi
 
 cd physiome-coko
