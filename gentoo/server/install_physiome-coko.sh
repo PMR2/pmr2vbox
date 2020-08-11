@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 POSTGRESQL_VERSION=11
 
@@ -183,6 +184,35 @@ certbot renew
 EOF
 chmod +x /etc/cron.weekly/certbot
 
+# physiome-coko init
+
+cat << EOF > /etc/init.d/physiome-coko
+#!/sbin/openrc-run
+
+name="physiome-coko daemon"
+description=""
+command=/usr/bin/node
+command_args="app.js"
+directory="/home/${PHYSIOME_USER}/physiome-coko/packages/app"
+command_background="yes"
+command_user="${PHYSIOME_USER}:${PHYSIOME_USER}"
+logfile=/var/log/physiome-coko.log
+pidfile=/var/run/physiome-coko.pid
+
+depend() {
+    need net
+}
+
+start_pre() {
+    if [ -n "\${logfile:-}" ]; then
+        start_stop_daemon_args="\$start_stop_daemon_args
+                --stdout \$logfile --stderr \$logfile"
+        checkpath -f -m 0600 -o \$command_user "\$logfile"
+    fi
+}
+EOF
+chmod +x /etc/init.d/physiome-coko
+
 ### physiome-coko
 
 npm install node-gyp -g
@@ -194,9 +224,16 @@ fi
 # Start up docker first as this will take some time
 /etc/init.d/docker start
 rc-update add docker default
-echo "waiting for docker to fully start"
-sleep 5
+docker_timeout=10
+echo "waiting ${docker_timeout} seconds for docker to fully start..."
+sleep ${docker_timeout}
+
 DOCKER_HOST=$(docker network inspect bridge --format '{{range .IPAM.Config}}{{.Gateway}}{{end}}')
+
+if [ -z "${DOCKER_HOST}" ]; then
+    echo "DOCKER_HOST failed to be found, quitting for now..."
+    exit 1
+fi
 
 POSTGRES_DATA_DIR=/var/lib/postgresql/${POSTGRESQL_VERSION}/data
 if [ ! -d "${POSTGRES_DATA_DIR}" ]; then

@@ -2,6 +2,8 @@
 # XXX this script assumes vboxtools has been used to "activate" a
 # VirtualBox control environment.
 
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
 export HOST_FQDN=${HOST_FQDN:-"dev.submit.physiomeproject.org"}
 export PHYSIOME_USER=${PHYSIOME_USER:="physiome"}
 
@@ -10,11 +12,11 @@ set -e
 # static definitions
 
 # XXX TODO upstream should implement some shell that sets this up
-alias SSH_CMD="ssh -oStrictHostKeyChecking=no -oBatchMode=Yes -i \"${VBOX_PRIVKEY}\" root@${VBOX_IP}"
+alias SSH_CMD="ssh -oUpdateHostKeys=yes -oStrictHostKeyChecking=no -oBatchMode=Yes -i \"${VBOX_PRIVKEY}\" root@${VBOX_IP}"
 
 if [ $# = 0 ]; then
     # enable all local commands/shortcuts
-    PHYSIOME_COKO=server/install_physiome-coko.sh
+    PHYSIOME_COKO="${DIR}/server/install_physiome-coko.sh"
     RESTORE_BACKUP=1
 fi
 
