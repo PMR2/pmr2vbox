@@ -33,7 +33,8 @@ EOF
 # Installing build and installation dependencies plus Virtuoso
 
 emerge --sync pmr2-overlay
-emerge --noreplace net-misc/omniORB dev-util/cmake dev-db/unixODBC \
+emerge --noreplace net-misc/omniORB::pmr2-overlay \
+    dev-util/cmake dev-db/unixODBC \
     media-libs/mesa media-libs/glu \
     dev-python/cffi media-libs/openjpeg media-libs/libjpeg-turbo \
     dev-python/virtualenv \
