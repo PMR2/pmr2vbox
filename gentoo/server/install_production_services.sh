@@ -55,11 +55,10 @@ cat << EOF > /etc/apache2/vhosts.d/90_${BUILDOUT_NAME}.conf
 
     DocumentRoot ${BUILDOUT_ROOT}/var/www
 
-    <Directory />
-        Options Indexes FollowSymLinks MultiViews
+    <Directory ${BUILDOUT_ROOT}/var/www>
+        Options FollowSymLinks MultiViews
         AllowOverride None
-        Order allow,deny
-        allow from all
+        Require all granted
     </Directory>
 
     ErrorLog /var/log/apache2/${HOST_FQDN}.error.log
@@ -99,11 +98,10 @@ cat << EOF > /etc/apache2/vhosts.d/90_${BUILDOUT_NAME}.conf
 #
 #     DocumentRoot ${BUILDOUT_ROOT}/var/www
 #
-#     <Directory />
-#         Options Indexes FollowSymLinks MultiViews
+#     <Directory ${BUILDOUT_ROOT}/var/www>
+#         Options FollowSymLinks MultiViews
 #         AllowOverride None
-#         Order allow,deny
-#         allow from all
+#         Require all granted
 #     </Directory>
 #
 #     ErrorLog /var/log/apache2/${HOST_FQDN}-ssl.error.log
