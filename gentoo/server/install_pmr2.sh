@@ -30,6 +30,12 @@ cat << EOF > /etc/portage/package.accept_keywords/pmr2
 net-misc/omniORB ~amd64
 EOF
 
+cat << EOF > /etc/portage/package.use/mesa
+# for the opencmiss dependencies.
+media-libs/mesa X
+media-libs/libglvnd X
+EOF
+
 # Installing build and installation dependencies plus Virtuoso
 
 emerge --sync pmr2-overlay
