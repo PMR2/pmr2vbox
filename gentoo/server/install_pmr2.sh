@@ -19,8 +19,6 @@ cat << EOF > /etc/portage/package.use/pmr2
 # required by dev-db/virtuoso-server-6.1.6::pmr2-overlay
 # required by dev-db/virtuoso-server::pmr2-overlay (argument)
 sys-libs/zlib minizip
-# omniORB
-net-misc/omniORB python_single_target_python2_7 -python_single_target_python3_6 -python_single_target_python3_7
 EOF
 
 mkdir -p /etc/portage/package.accept_keywords
@@ -36,9 +34,14 @@ media-libs/mesa X
 media-libs/libglvnd X
 EOF
 
+cat << EOF > /etc/portage/package.mask/virtualenv
+>=dev-python/virtualenv-20
+EOF
+
 # Installing build and installation dependencies plus Virtuoso
 
 emerge --sync pmr2-overlay
+emerge --noreplace dev-lang/python:2.7
 emerge --noreplace net-misc/omniORB::pmr2-overlay \
     dev-util/cmake dev-db/unixODBC \
     media-libs/mesa media-libs/glu \
@@ -131,10 +134,8 @@ rc-update add virtuoso default
 
 # Install PMR2
 
-eselect python set python2.7
-
-if ! id -u $ZOPE_USER > /dev/null 2>&1; then
-    useradd -m -k /etc/skel $ZOPE_USER
+if ! id -u ${ZOPE_USER} > /dev/null 2>&1; then
+    useradd -m -k /etc/skel ${ZOPE_USER}
 fi
 
 mkdir -p "${PMR_HOME}"
@@ -151,8 +152,13 @@ cd pmr2.buildout
 # original bootstrap zc.buildout
 # su ${ZOPE_USER} -c "bin/python bootstrap.py"
 
+# Force Python 2 be the default for the zope user (eselect lost py2 support)
+su ${ZOPE_USER} -c "ln -sf /usr/bin/python2.7 /home/${ZOPE_USER}/bin/python"
+echo "export PATH=/home/${ZOPE_USER}/bin:"'${PATH}' > /home/${ZOPE_USER}/.bashrc
+chown ${ZOPE_USER}:${ZOPE_USER} /home/${ZOPE_USER}/.bashrc
+
 # virtualenv zc.buildout
-su ${ZOPE_USER} -c "virtualenv ."
+su ${ZOPE_USER} -c "virtualenv . -p /usr/bin/python2.7"
 # TODO extract setuptools version from the buildout config that has it
 su ${ZOPE_USER} -c "bin/pip install -U zc.buildout==1.7.1 setuptools==20.1.1"
 
