@@ -86,7 +86,9 @@ cat << EOF > /etc/apache2/vhosts.d/90_${BUILDOUT_NAME}.conf
     SetEnv proxy-sendcl 1
 
     RewriteEngine On
-#     RewriteCond %{REQUEST_URI} !^/robots.txt
+    # RewriteCond %{REQUEST_URI} !^/robots.txt
+    # RewriteCond %{REQUEST_METHOD} POST
+    # RewriteRule "^/(.*)" "-" [F,L]
     RewriteCond %{REQUEST_URI} !^/\\.well\\-known/acme\\-challenge/
     RewriteRule "^/(.*)" "http://127.0.0.1:${ZOPE_INSTANCE_PORT}/VirtualHostBase/http/${HOST_FQDN}:80/${SITE_ROOT}/VirtualHostRoot/\$1" [P]
 </VirtualHost>

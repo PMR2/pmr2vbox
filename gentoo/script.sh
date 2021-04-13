@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # XXX this script assumes vboxtools has been used to "activate" a
 # VirtualBox control environment.
 
@@ -36,6 +36,14 @@ export PMR_ZEO_BACKUP=${PMR_ZEO_BACKUP:-"${PMR_HOME}/backup"}
 
 export ZOPE_INSTANCE_PORT=${ZOPE_INSTANCE_PORT:-"8280"}
 
+# for SETUP_AS_PROD usage
+export VBOX_SATA_DEVICE=${VBOX_SATA_DEVICE:-0}
+export PROD_DISK_SIZE=${PROD_DISK_SIZE:-"30000"}
+export PROD_IMG_NAME=${PROD_IMG_NAME:-"${VBOX_NAME}.data.vhd"}
+export PROD_IMG_PORT=${PROD_IMG_PORT:-2}
+export PROD_ROOT=${PROD_ROOT:-"/opt/${ZOPE_USER}"}
+
+
 chmod 600 "${DIR}/pmrdemo_key"
 
 
@@ -46,8 +54,95 @@ alias SSH_CMD="ssh -oStrictHostKeyChecking=no -oBatchMode=Yes -i \"${VBOX_PRIVKE
 
 export BUILDOUT_ROOT="${PMR_HOME}/${BUILDOUT_NAME}"
 
-
 restore_pmr2_backup () {
+    if [ ! -z "${SETUP_AS_PROD}" ]; then
+        local prod_root_mounted=$(SSH_CMD "mount | grep \"${PROD_ROOT}\"")
+        if [ -z "${prod_root_mounted}" ]; then
+            local disks_original=$(SSH_CMD "lsblk -n -r -o NAME,TYPE,UUID -p |grep disk |cut -f1 -d\ ")
+            VBoxManage createmedium disk --size ${PROD_DISK_SIZE} --format VHD \
+                --filename "${PROD_IMG_NAME}"
+            VBoxManage storageattach "${VBOX_NAME}" --storagectl SATA \
+                --port ${PROD_IMG_PORT} --device ${VBOX_SATA_DEVICE} --type hdd \
+                --medium "${PROD_IMG_NAME}"
+
+            while true; do
+                local disks_new=$(SSH_CMD "lsblk -n -r -o NAME,TYPE,UUID -p |grep disk |cut -f1 -d\ ")
+                export DATA_DEVICE=$(diff --suppress-common-lines <(echo "${disks_original}") <(echo "${disks_new}") | grep '>' | cut -b3-)
+                if [ ! -z "${DATA_DEVICE}" ]; then
+                    break
+                fi
+                sleep 1
+            done
+        fi
+
+        SSH_CMD <<- EOF
+        prod_root_mounted=\$(mount | grep /opt/zope)
+        if [ -z "\${prod_root_mounted}" ]; then
+            parted --script "${DATA_DEVICE}" \\
+                mklabel gpt \\
+                mkpart primary 0 1MB \\
+                mkpart primary 1MB 100% \\
+                set 1 bios_grub on
+            mkfs.ext4 "${DATA_DEVICE}2"
+            while true; do
+                uuid=\$(lsblk -n -r -o NAME,TYPE,UUID -p |grep ${DATA_DEVICE}2 | cut -f3 -d\ )
+                if [ ! -z "\${uuid}" ]; then
+                    break
+                fi
+                sleep 1
+            done
+            echo -e "UUID=\"\${uuid}\"\t${PROD_ROOT}\text4\trw,noatime\t0 0" >> /etc/fstab
+            mkdir -p "${PROD_ROOT}"
+            mount "${PROD_ROOT}"
+            chown -R ${ZOPE_USER}:${ZOPE_USER} "${PROD_ROOT}"
+        fi
+
+	/etc/init.d/pmr2.instance stop
+	/etc/init.d/pmr2.zeoserver stop
+	/etc/init.d/virtuoso stop
+	/etc/init.d/morre.pmr2 stop
+
+        if [ ! -L "${PMR_HOME}/pmr2.buildout/var/filestorage/" ]; then
+            rm -rf "${PMR_HOME}/pmr2.buildout/var/filestorage/"
+            ln -s "${PROD_ROOT}/var/filestorage" "${PMR_HOME}/pmr2.buildout/var/filestorage"
+            chown ${ZOPE_USER}:${ZOPE_USER} "${PMR_HOME}/pmr2.buildout/var/filestorage"
+        fi
+        su - ${ZOPE_USER} -c "mkdir -p \"${PROD_ROOT}/var/filestorage\" "
+
+        if [ ! -L "${PMR_HOME}/pmr2.buildout/var/blobstorage/" ]; then
+            rm -rf "${PMR_HOME}/pmr2.buildout/var/blobstorage/"
+            ln -s "${PROD_ROOT}/var/blobstorage" "${PMR_HOME}/pmr2.buildout/var/blobstorage"
+            chown ${ZOPE_USER}:${ZOPE_USER} "${PMR_HOME}/pmr2.buildout/var/blobstorage"
+        fi
+        su - ${ZOPE_USER} -c "mkdir -p \"${PROD_ROOT}/var/blobstorage\" "
+
+        if [ ! -L "${PMR_HOME}/neo4j-community-3.0.1/data" ]; then
+            rm -rf "${PMR_HOME}/neo4j-community-3.0.1/data"
+            ln -s "${PROD_ROOT}/var/lib/neo4j/data" "${PMR_HOME}/neo4j-community-3.0.1/data"
+        fi
+        su - ${ZOPE_USER} -c "mkdir -p \"${PROD_ROOT}/var/lib/neo4j/data\" "
+
+
+        if [ ! -L "${PROD_ROOT}/pmr2" ]; then
+            rm -rf "${PROD_ROOT}/pmr2"
+            ln -s "${PROD_ROOT}/pmr2" ${PMR_DATA_ROOT}
+        fi
+
+        if [ ! -L "/var/lib/virtuoso/db" ]; then
+            mkdir -p "${PROD_ROOT}/var/lib/virtuoso"
+            mv /var/lib/virtuoso/db/ "${PROD_ROOT}/var/lib/virtuoso/"
+            ln -s "${PROD_ROOT}/var/lib/virtuoso/db" /var/lib/virtuoso/db
+        fi
+	EOF
+
+        # TODO deal with PMR_DATA_ROOT more correctly?
+        # Doing it this way simply due to how production data is typically
+        # organized.
+        export PMR_DATA_ROOT="${PROD_ROOT}/pmr2"
+        export PMR_ZEO_BACKUP="${PROD_ROOT}/backup"
+    fi
+
+
     # restore from backup
     SSH_CMD <<- EOF
 	mkdir -p "${PMR_DATA_ROOT}"
@@ -92,7 +187,7 @@ if [ $# = 0 ]; then
     INSTALL_PMR2="${DIR}/server/install_pmr2.sh"
     INSTALL_MORRE="${DIR}/server/install_morre.sh"
     INSTALL_BIVES="${DIR}/server/install_bives.sh"
-    SETUP_PRODUCTION="${DIR}/server/install_production_services.sh"
+    INSTALL_PRODSERVICE="${DIR}/server/install_production_services.sh"
     RESTORE_BACKUP=1
 fi
 
@@ -112,7 +207,11 @@ while [[ $# > 0 ]]; do
             shift
             ;;
         --install-production)
-            SETUP_PRODUCTION="${DIR}/server/install_production_services.sh"
+            INSTALL_PRODSERVICE="${DIR}/server/install_production_services.sh"
+            shift
+            ;;
+        --setup-as-production)
+            export SETUP_AS_PROD=1
             shift
             ;;
         --restore-backup)
@@ -144,8 +243,8 @@ if [ ! -z "${INSTALL_BIVES}" ]; then
 fi
 
 # install and setup for production
-if [ ! -z "${SETUP_PRODUCTION}" ]; then
-    envsubst \${BUILDOUT_NAME},\$HOST_FQDN,\$BUILDOUT_ROOT,\$ZOPE_INSTANCE_PORT,\$SITE_ROOT < "${SETUP_PRODUCTION}" | SSH_CMD
+if [ ! -z "${INSTALL_PRODSERVICE}" ]; then
+    envsubst \${BUILDOUT_NAME},\$HOST_FQDN,\$BUILDOUT_ROOT,\$ZOPE_INSTANCE_PORT,\$SITE_ROOT < "${INSTALL_PRODSERVICE}" | SSH_CMD
 fi
 
 # restore backup
