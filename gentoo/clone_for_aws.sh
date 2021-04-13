@@ -14,24 +14,22 @@ VBoxManage storageattach "${VBOX_NAME}" --storagectl SATA \
 
 sleep 1
 
-# XXX TODO use $(lsblk -r | grep disk) before and after and use the diff
-# to get the device to set ${UPLOAD_IMG_DEVICE}
-
-UPLOAD_IMG_DEVICE=${UPLOAD_IMG_DEVICE:-sdb}
-
-# XXX the above may be _very_ different if there are multiple disk
-# images (to be) attached to the target VM.
-
 SSH_CMD << EOF
-parted --script /dev/${UPLOAD_IMG_DEVICE} \\
+while true; do
+    check=\$(ls -crt /dev/disk/by-id/ |tail -n1 |grep -v part)
+    [ ! -z "\${check}" ] && break
+    sleep 1
+done
+UPLOAD_IMG_DEVICE=\$(realpath "/dev/disk/by-id/\${check}")
+parted --script \${UPLOAD_IMG_DEVICE} \\
     mklabel gpt \\
     mkpart primary 0 1MB \\
     mkpart primary 1MB 100% \\
     set 1 bios_grub on
-mkfs.ext4 /dev/${UPLOAD_IMG_DEVICE}2
+mkfs.ext4 \${UPLOAD_IMG_DEVICE}2
 mkdir -p /mnt/gentoo
-mount /dev/${UPLOAD_IMG_DEVICE}2 /mnt/gentoo
-rsync -raAHX \\
+mount \${UPLOAD_IMG_DEVICE}2 /mnt/gentoo
+rsync -raAHXx \\
     --include=/var/log/{apache,tomcat}*/ \\
     --include=/var/tmp/tomcat*/ \\
     --exclude=/etc/ssh/ssh_host* \\
@@ -41,10 +39,12 @@ mount -t proc proc /mnt/gentoo/proc
 mount -R /dev /mnt/gentoo/dev
 mount -R /sys /mnt/gentoo/sys
 echo 'modules="ena"' >> /mnt/gentoo/etc/conf.d/modules
-chroot /mnt/gentoo grub-install /dev/${UPLOAD_IMG_DEVICE}
 chroot /mnt/gentoo grub-mkconfig -o /boot/grub/grub.cfg
-sed -i 's/^UUID=\\S*/'\`grep UUID /mnt/gentoo/boot/grub/grub.cfg |head -n1 | sed 's/.*root=\\(\\S*\\).*/\\1/'\`/ /mnt/gentoo/etc/fstab
-chroot /mnt/gentoo rc-update add amazon-ec2 boot
+grub-install --root-directory=/mnt/gentoo \${UPLOAD_IMG_DEVICE}
+root_uuid=\$(findmnt -n -r -o UUID /)
+mnt_gentoo_uuid=\$(findmnt -n -r -o UUID /mnt/gentoo)
+sed -i "s/\${root_uuid}/\${mnt_gentoo_uuid}/" /mnt/gentoo/etc/fstab
+chroot /mnt/gentoo rc-update add amazon-ec2 default
 umount -R /mnt/gentoo
 EOF
 

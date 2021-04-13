@@ -9,7 +9,7 @@ warn () {
 
 # TODO define permission policies
 
-s3_region () {
+set_s3_region () {
     region=$(aws s3api get-bucket-location --bucket "${S3_BUCKET}")
     export AWS_DEFAULT_REGION=$region
     warn "S3_BUCKET '${S3_BUCKET}' is at region '${AWS_DEFAULT_REGION}'"
@@ -101,21 +101,20 @@ register_vmimport_role () {
 
 # 1. upload the image to S3.
 
-upload_s3 () {
-    src="$1"
-    S3_KEY=${S3_KEY:-$(
-        echo ${UPLOAD_IMG} | sed -r "s/(\.[^\.]*)$/-$(date -u +%Y%m%d)\1/")}
+upload_to_s3 () {
+    src="${1}"
     # this one can just be played out normally
-    # TODO check if S3_KEY exists, and skip the step if it is
-    warn "uploading as '${S3_KEY}'"
+    warn "uploading as '${src}'"
+    export S3_KEY="${src}"
     ret=0
+    # TODO optionally allow/prompt user to overwrite?
     aws s3api head-object \
         --bucket "${S3_BUCKET}" \
-        --key "${S3_KEY}" > /dev/null 2>&1 || ret=$?
+        --key "${src}" > /dev/null 2>&1 || ret=$?
     if [ $ret = 0 ]; then
-        warn "s3://${S3_BUCKET}/${S3_KEY} already uploaded"
+        warn "s3://${S3_BUCKET}/${src} already uploaded"
     else
-        aws s3 cp "${src}" "s3://${S3_BUCKET}/${S3_KEY}"
+        aws s3 cp "${src}" "s3://${S3_BUCKET}/${src}"
     fi
 }
 
@@ -165,23 +164,51 @@ monitor_import () {
     return 1
 }
 
+upload_to_ec2_snapshot () {
+    # XXX debug echo and fake variable.
+    upload_to_s3 "${1}"
+    s3_to_ec2_snapshot
+    monitor_import
+    # need to append the resulting snapshot id for use below
+    # e.g. /dev/sdf, /dev/sdg, etc
+}
+
+# 3. Convert the uploaded snapshot(s) into an AMI.
+
 ec2_snapshot_to_ami () {
-    # TODO assign this to something to be used?
-    # TODO link to subsequent /opt/zope snapshots?
-    export AMI_ID=$(aws ec2 register-image --name "${S3_KEY}" --ena-support \
-    --cli-input-json='{
+    # TODO warn that there is a limit to available block device letters...
+    ec2_root_snapshot="${1}"
+    shift
+    ami_name="${1}"
+    shift
+    additional_snapshots=("${@}")
+    additional_blkdev=''
+    blkc='f'
+    for snapshot_id in "${additional_snapshots[@]}"; do
+        additional_blkdev=${additional_blkdev}',
+        {
+            "DeviceName": "/dev/sd'${blkc}'",
+            "Ebs": {
+                "SnapshotId": "'${snapshot_id}'",
+                "VolumeType": "gp2"
+            }
+        }'
+        blkc=$(echo ${blkc} | tr "a-z" "b-za")
+    done
+
+    export AMI_ID=$(aws ec2 register-image --name "${ami_name}" \
+    --ena-support --cli-input-json='{
     "Architecture": "x86_64",
     "BlockDeviceMappings": [
         {
             "DeviceName": "/dev/sda1",
             "Ebs": {
-                "SnapshotId": "'${EC2_SNAPSHOT}'",
-                "VolumeSize": 10,
+                "SnapshotId": "'${ec2_root_snapshot}'",
                 "VolumeType": "gp2"
             }
-        }
+        }'"${additional_blkdev}"'
     ],
-    "Name": "'${S3_KEY}'",
+    "Name": "'${ami_name}'",
     "RootDeviceName": "/dev/sda1",
     "VirtualizationType": "hvm"
 }')

@@ -16,6 +16,6 @@ if [ -z "${S3_BUCKET}" ]; then
     exit 2
 fi
 
-s3_region "${S3_BUCKET}"
+set_s3_region "${S3_BUCKET}"
 register_vmimport_role
 echo OK
