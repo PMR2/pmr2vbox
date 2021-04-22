@@ -41,7 +41,7 @@ EOF
 # Installing build and installation dependencies plus Virtuoso
 
 emerge --sync pmr2-overlay
-emerge --noreplace dev-lang/python:2.7
+emerge --noreplace dev-lang/python:2.7 dev-lang/python:3.8
 emerge --noreplace net-misc/omniORB::pmr2-overlay \
     dev-util/cmake dev-db/unixODBC \
     media-libs/mesa media-libs/glu \
@@ -165,6 +165,18 @@ su ${ZOPE_USER} -c "bin/pip install -U zc.buildout==1.7.1 setuptools==20.1.1"
 # TODO figure out how to specify options/customize a base set of options
 # su ${ZOPE_USER} -c "bin/buildout -c buildout-git.cfg"
 su ${ZOPE_USER} -c "bin/buildout -c deploy-all.cfg"
+
+# ZincJSGroupExporter
+
+cd "${PMR_HOME}"
+if [ ! -d ZincJSGroupExporter ]; then
+    su ${ZOPE_USER} -c "git clone https://github.com/metatoaster/ZincJSGroupExporter.git"
+fi
+cd ZincJSGroupExporter
+su ${ZOPE_USER} -c "git checkout rebuild"
+su ${ZOPE_USER} -c "virtualenv . -p /usr/bin/python3.8"
+su ${ZOPE_USER} -c "bin/pip install --no-index --find-links=https://dist.physiomeproject.org opencmiss.zinc"
+su ${ZOPE_USER} -c "bin/pip install -e ."
 
 
 # Set up OpenRC init scripts for PMR2
