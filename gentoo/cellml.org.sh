@@ -3,6 +3,7 @@
 # VirtualBox control environment.
 
 set -e
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 export BACKUP_HOST=${BACKUP_HOST:-"dist.physiomeproject.org"}
 export BACKUP_USER=${BACKUP_USER:-"pmrdemo"}
@@ -58,8 +59,8 @@ restore_cellml_backup () {
 
 if [ $# = 0 ]; then
     # enable all local commands/shortcuts
-    CELLML_ORG=server/cellml.org.sh
-    SETUP_PRODUCTION=server/install_production_services.sh
+    CELLML_ORG="${DIR}/server/cellml.org.sh"
+    INSTALL_PRODSERVICE="${DIR}/server/install_production_services.sh"
     RESTORE_BACKUP=1
 fi
 
@@ -67,11 +68,11 @@ while [[ $# > 0 ]]; do
     opt="$1"
     case "${opt}" in
         --install-cellml)
-            CELLML_ORG=server/cellml.org.sh
+            CELLML_ORG="${DIR}/server/cellml.org.sh"
             shift
             ;;
         --install-production)
-            SETUP_PRODUCTION=server/install_production_services.sh
+            INSTALL_PRODSERVICE="${DIR}/server/install_production_services.sh"
             shift
             ;;
         --restore-backup)
@@ -93,8 +94,8 @@ if [ ! -z "${CELLML_ORG}" ]; then
 fi
 
 # install and setup for production
-if [ ! -z "${SETUP_PRODUCTION}" ]; then
-    envsubst \${BUILDOUT_NAME},\$HOST_FQDN,\$BUILDOUT_ROOT,\$ZOPE_INSTANCE_PORT,\$SITE_ROOT < "${SETUP_PRODUCTION}" | SSH_CMD
+if [ ! -z "${INSTALL_PRODSERVICE}" ]; then
+    envsubst \${BUILDOUT_NAME},\$HOST_FQDN,\$BUILDOUT_ROOT,\$ZOPE_INSTANCE_PORT,\$SITE_ROOT < "${INSTALL_PRODSERVICE}" | SSH_CMD
 fi
 
 # restore backup

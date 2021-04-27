@@ -3,13 +3,17 @@ set -e
 
 # various build dependencies
 
+mkdir -p /etc/portage/package.mask
+cat << EOF > /etc/portage/package.mask/virtualenv
+>=dev-python/virtualenv-20
+EOF
+
 emerge --noreplace \
+    dev-lang/python:2.7 \
     dev-python/cffi media-libs/openjpeg media-libs/libjpeg-turbo \
     dev-python/virtualenv
 
 # Install Zope.
-
-eselect python set python2.7
 
 if ! id -u $CELLML_USER > /dev/null 2>&1; then
     useradd -m -k /etc/skel $CELLML_USER
@@ -17,6 +21,14 @@ fi
 
 mkdir -p "${CELLML_HOME}"
 chown ${CELLML_USER}:${CELLML_USER} "${CELLML_HOME}"
+
+# Force Python 2 be the default for the zope user (eselect lost py2 support)
+su ${CELLML_USER} -c "
+    mkdir -p /home/${CELLML_USER}/bin ;
+    ln -sf /usr/bin/python2.7 /home/${CELLML_USER}/bin/python
+"
+echo "export PATH=/home/${CELLML_USER}/bin:"'${PATH}' > /home/${CELLML_USER}/.bashrc
+chown ${CELLML_USER}:${CELLML_USER} /home/${CELLML_USER}/.bashrc
 
 cd "${CELLML_HOME}"
 if [ ! -d cellml.site ]; then
@@ -29,7 +41,7 @@ cd cellml.site
 # su ${CELLML_USER} -c "bin/python bootstrap.py"
 
 # virtualenv zc.buildout
-su ${CELLML_USER} -c "virtualenv ."
+su ${CELLML_USER} -c "virtualenv . -p /usr/bin/python2.7"
 # TODO extract setuptools version from the buildout config that has it
 su ${CELLML_USER} -c "bin/pip install -U zc.buildout==1.7.1 setuptools==26.1.1"
 

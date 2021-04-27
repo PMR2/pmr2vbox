@@ -153,7 +153,10 @@ cd pmr2.buildout
 # su ${ZOPE_USER} -c "bin/python bootstrap.py"
 
 # Force Python 2 be the default for the zope user (eselect lost py2 support)
-su ${ZOPE_USER} -c "ln -sf /usr/bin/python2.7 /home/${ZOPE_USER}/bin/python"
+su ${ZOPE_USER} -c "
+    mkdir -p /home/${ZOPE_USER}/bin ;
+    ln -sf /usr/bin/python2.7 /home/${ZOPE_USER}/bin/python
+"
 echo "export PATH=/home/${ZOPE_USER}/bin:"'${PATH}' > /home/${ZOPE_USER}/.bashrc
 chown ${ZOPE_USER}:${ZOPE_USER} /home/${ZOPE_USER}/.bashrc
 
