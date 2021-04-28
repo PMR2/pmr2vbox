@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -i
 # XXX this script assumes vboxtools has been used to "activate" a
 # VirtualBox control environment.
 
@@ -105,14 +105,14 @@ restore_pmr2_backup () {
         if [ ! -L "${PMR_HOME}/pmr2.buildout/var/filestorage/" ]; then
             rm -rf "${PMR_HOME}/pmr2.buildout/var/filestorage/"
             ln -s "${PROD_ROOT}/var/filestorage" "${PMR_HOME}/pmr2.buildout/var/filestorage"
-            chown ${ZOPE_USER}:${ZOPE_USER} "${PMR_HOME}/pmr2.buildout/var/filestorage"
+            chown -h ${ZOPE_USER}:${ZOPE_USER} "${PMR_HOME}/pmr2.buildout/var/filestorage"
         fi
         su - ${ZOPE_USER} -c "mkdir -p \"${PROD_ROOT}/var/filestorage\" "
 
         if [ ! -L "${PMR_HOME}/pmr2.buildout/var/blobstorage/" ]; then
             rm -rf "${PMR_HOME}/pmr2.buildout/var/blobstorage/"
             ln -s "${PROD_ROOT}/var/blobstorage" "${PMR_HOME}/pmr2.buildout/var/blobstorage"
-            chown ${ZOPE_USER}:${ZOPE_USER} "${PMR_HOME}/pmr2.buildout/var/blobstorage"
+            chown -h ${ZOPE_USER}:${ZOPE_USER} "${PMR_HOME}/pmr2.buildout/var/blobstorage"
         fi
         su - ${ZOPE_USER} -c "mkdir -p \"${PROD_ROOT}/var/blobstorage\" "
 
@@ -123,9 +123,9 @@ restore_pmr2_backup () {
         su - ${ZOPE_USER} -c "mkdir -p \"${PROD_ROOT}/var/lib/neo4j/data\" "
 
 
-        if [ ! -L "${PROD_ROOT}/pmr2" ]; then
-            rm -rf "${PROD_ROOT}/pmr2"
-            ln -s "${PROD_ROOT}/pmr2" ${PMR_DATA_ROOT}
+        if [ ! -L "${PMR_HOME}/pmr2" ]; then
+            rm -rf "${PMR_HOME}/pmr2"
+            ln -s "${PMR_DATA_ROOT}" "${PMR_HOME}/pmr2"
         fi
 
         if [ ! -L "/var/lib/virtuoso/db" ]; then
@@ -177,8 +177,6 @@ restore_pmr2_backup () {
 	EOF
 
     POSTINSTALL_REINDEX="${DIR}/server/postinstall_reindex.sh"
-
-    envsubst \$ZOPE_USER,\$PMR_HOME < "${POSTINSTALL_REINDEX}" | SSH_CMD
 }
 
 
@@ -216,6 +214,10 @@ while [[ $# > 0 ]]; do
             ;;
         --restore-backup)
             RESTORE_BACKUP=1
+            shift
+            ;;
+        --post-install-reindex)
+            POSTINSTALL_REINDEX="${DIR}/server/postinstall_reindex.sh"
             shift
             ;;
         *)
@@ -256,6 +258,9 @@ if [ ! -z "${RESTORE_BACKUP}" ]; then
     fi
 fi
 
+if [ ! -z "${POSTINSTALL_REINDEX}" ]; then
+    envsubst \$ZOPE_USER,\$PMR_HOME < "${POSTINSTALL_REINDEX}" | SSH_CMD
+fi
 
 # XXX make this cleanup run regardless.
 SSH_CMD /etc/init.d/net.eth1 stop

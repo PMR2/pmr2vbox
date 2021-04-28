@@ -183,6 +183,7 @@ su ${ZOPE_USER} -c "bin/pip install -e ."
 
 
 # Set up OpenRC init scripts for PMR2
+cd "${PMR_HOME}/pmr2.buildout"
 
 S=\\\$
 

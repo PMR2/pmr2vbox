@@ -44,7 +44,7 @@ grub-install --root-directory=/mnt/gentoo \${UPLOAD_IMG_DEVICE}
 root_uuid=\$(findmnt -n -r -o UUID /)
 mnt_gentoo_uuid=\$(findmnt -n -r -o UUID /mnt/gentoo)
 sed -i "s/\${root_uuid}/\${mnt_gentoo_uuid}/" /mnt/gentoo/etc/fstab
-chroot /mnt/gentoo rc-update add amazon-ec2 default
+chroot /mnt/gentoo rc-update add amazon-ec2 boot
 umount -R /mnt/gentoo
 EOF
 
