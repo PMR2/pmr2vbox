@@ -86,11 +86,19 @@ cat << EOF > /etc/apache2/vhosts.d/90_${BUILDOUT_NAME}.conf
     SetEnv proxy-sendcl 1
 
     RewriteEngine On
-    # RewriteCond %{REQUEST_URI} !^/robots.txt
+    RewriteCond %{REQUEST_URI} /login
+    RewriteCond %{HTTP_REFERER} http://(.*)
+    RewriteRule "^/(.*)" "https://${HOST_FQDN}/\$1?came_from=https://%1" [L]
+
     # RewriteCond %{REQUEST_METHOD} POST
-    # RewriteRule "^/(.*)" "-" [F,L]
+    # RewriteRule "^/.*(?<!git-upload-pack)$" "-" [F,L]
+
+    # RewriteCond %{REQUEST_URI} !^/robots.txt
     RewriteCond %{REQUEST_URI} !^/\\.well\\-known/acme\\-challenge/
     RewriteRule "^/(.*)" "http://127.0.0.1:${ZOPE_INSTANCE_PORT}/VirtualHostBase/http/${HOST_FQDN}:80/${SITE_ROOT}/VirtualHostRoot/\$1" [P]
+
+    # Uncomment when SSL is enabled.
+    # Redirect permanent / https://${HOST_FQDN}/
 </VirtualHost>
 
 # Uncomment when certbot has been set up to get letsencrypt certificates
@@ -107,6 +115,15 @@ cat << EOF > /etc/apache2/vhosts.d/90_${BUILDOUT_NAME}.conf
 #         Require all granted
 #     </Directory>
 #
+#     ProxyPass /.well-known !
+#     Alias /.well-known "/var/www/.well-known"
+#     <Directory "/var/www/.well-known">
+#         Require all granted
+#         AllowOverride All
+#         AddDefaultCharset Off
+#         Header set Content-Type "text/plain"
+#     </Directory>
+#
 #     ErrorLog /var/log/apache2/${HOST_FQDN}-ssl.error.log
 #
 #     # Possible values include: debug, info, notice, warn, error, crit,
@@ -119,6 +136,8 @@ cat << EOF > /etc/apache2/vhosts.d/90_${BUILDOUT_NAME}.conf
 #
 #     SSLCertificateKeyFile /etc/letsencrypt/live/${HOST_FQDN}/privkey.pem
 #     SSLCertificateFile /etc/letsencrypt/live/${HOST_FQDN}/fullchain.pem
+#
+#     Header onsuccess edit Set-Cookie (.*) "\$1;Secure"
 #
 #     SetOutputFilter DEFLATE
 #     SetEnvIfNoCase Request_URI "\\.(?:gif|jpe?g|png)$" no-gzip

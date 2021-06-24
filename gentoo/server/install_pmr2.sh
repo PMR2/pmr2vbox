@@ -163,7 +163,7 @@ chown ${ZOPE_USER}:${ZOPE_USER} /home/${ZOPE_USER}/.bashrc
 # virtualenv zc.buildout
 su ${ZOPE_USER} -c "virtualenv . -p /usr/bin/python2.7"
 # TODO extract setuptools version from the buildout config that has it
-su ${ZOPE_USER} -c "bin/pip install -U zc.buildout==1.7.1 setuptools==20.1.1"
+su ${ZOPE_USER} -c "bin/pip install -U zc.buildout==1.7.1 setuptools==36.8.0"
 
 # TODO figure out how to specify options/customize a base set of options
 # su ${ZOPE_USER} -c "bin/buildout -c buildout-git.cfg"

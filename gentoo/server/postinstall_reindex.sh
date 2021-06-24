@@ -28,7 +28,7 @@ virtuoso_settings = ISettings(pmr2_settings)
 
 # XXX assuming user is dba
 # TODO create user if user is not 'dba'
-cmd = 'set password dba %s;\\n' % virtuoso_settings.password
+cmd = 'set password dba %s;\\ncheckpoint;\\n' % virtuoso_settings.password
 p = Popen(['${ISQL_V}'], stdin=PIPE, stdout=PIPE)
 out, err = p.communicate(cmd.encode('utf8'))
 

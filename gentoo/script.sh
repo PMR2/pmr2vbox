@@ -2,6 +2,9 @@
 # XXX this script assumes vboxtools has been used to "activate" a
 # VirtualBox control environment.
 
+# unset history file
+unset HISTFILE
+
 set -e
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
