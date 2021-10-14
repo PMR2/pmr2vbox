@@ -3,6 +3,7 @@ set -e
 
 # XXX TODO move all paths hardcoded below to here as variables
 ODBC_INI=/etc/unixODBC/odbc.ini
+# Specify the Python 3 used to build the wheel for the opencmiss.zinc package.
 PYTHON3_VERSION="3.9"
 
 mkdir -p /etc/portage/repos.conf
@@ -183,6 +184,17 @@ su ${ZOPE_USER} -c "git checkout rebuild"
 su ${ZOPE_USER} -c "virtualenv . -p /usr/bin/python${PYTHON3_VERSION}"
 su ${ZOPE_USER} -c "bin/pip install --no-index --find-links=https://dist.physiomeproject.org opencmiss.zinc"
 su ${ZOPE_USER} -c "bin/pip install -e ."
+
+# opencmiss.exporter
+
+cd "${PMR_HOME}"
+if [ ! -d "opencmiss.zinc" ]; then
+    su ${ZOPE_USER} -c "mkdir opencmiss.zinc"
+fi
+cd "opencmiss.zinc"
+su ${ZOPE_USER} -c "virtualenv . -p /usr/bin/python${PYTHON3_VERSION}"
+su ${ZOPE_USER} -c "bin/pip install --no-index --find-links=https://dist.physiomeproject.org opencmiss.zinc"
+su ${ZOPE_USER} -c "bin/pip install opencmiss.exporter"
 
 
 # Set up OpenRC init scripts for PMR2
