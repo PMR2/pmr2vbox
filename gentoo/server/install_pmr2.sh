@@ -38,10 +38,6 @@ media-libs/mesa X
 media-libs/libglvnd X
 EOF
 
-cat << EOF > /etc/portage/package.mask/virtualenv
->=dev-python/virtualenv-20
-EOF
-
 # Installing build and installation dependencies plus Virtuoso
 
 emerge --sync pmr2-overlay
@@ -165,7 +161,10 @@ echo "export PATH=/home/${ZOPE_USER}/bin:"'${PATH}' > /home/${ZOPE_USER}/.bashrc
 chown ${ZOPE_USER}:${ZOPE_USER} /home/${ZOPE_USER}/.bashrc
 
 # virtualenv zc.buildout
-su ${ZOPE_USER} -c "virtualenv . -p /usr/bin/python2.7"
+# need to bootstrap a sane virtualenv for python 2
+su ${ZOPE_USER} -c "virtualenv bootstrap -p /usr/bin/python2.7"
+su ${ZOPE_USER} -c "bootstrap/bin/python -m pip install 'virtualenv<20'"
+su ${ZOPE_USER} -c "bootstrap/bin/virtualenv . -p /usr/bin/python2.7"
 # TODO extract setuptools version from the buildout config that has it
 su ${ZOPE_USER} -c "bin/pip install -U zc.buildout==1.7.1 setuptools==36.8.0"
 

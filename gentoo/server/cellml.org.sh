@@ -3,10 +3,9 @@ set -e
 
 # various build dependencies
 
+mkdir -p /etc/portage/package.accept_keywords
 mkdir -p /etc/portage/package.mask
-cat << EOF > /etc/portage/package.mask/virtualenv
->=dev-python/virtualenv-20
-EOF
+mkdir -p /etc/portage/package.use
 
 emerge --noreplace \
     dev-lang/python:2.7 \
@@ -41,7 +40,10 @@ cd cellml.site
 # su ${CELLML_USER} -c "bin/python bootstrap.py"
 
 # virtualenv zc.buildout
-su ${CELLML_USER} -c "virtualenv . -p /usr/bin/python2.7"
+# need to bootstrap a sane virtualenv for python 2
+su ${ZOPE_USER} -c "virtualenv bootstrap -p /usr/bin/python2.7"
+su ${ZOPE_USER} -c "bootstrap/bin/python -m pip install 'virtualenv<20'"
+su ${ZOPE_USER} -c "bootstrap/bin/virtualenv . -p /usr/bin/python2.7"
 # TODO extract setuptools version from the buildout config that has it
 su ${CELLML_USER} -c "bin/pip install -U zc.buildout==1.7.1 setuptools==26.1.1"
 
