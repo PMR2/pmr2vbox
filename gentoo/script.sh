@@ -186,6 +186,7 @@ restore_pmr2_backup () {
 if [ $# = 0 ]; then
     # enable all local commands/shortcuts
     INSTALL_PMR2="${DIR}/server/install_pmr2.sh"
+    INSTALL_PMR2_COREDATA="${DIR}/server/install_pmr2_coredata.sh"
     INSTALL_MORRE="${DIR}/server/install_morre.sh"
     INSTALL_BIVES="${DIR}/server/install_bives.sh"
     INSTALL_PRODSERVICE="${DIR}/server/install_production_services.sh"
@@ -197,6 +198,10 @@ while [[ $# > 0 ]]; do
     case "${opt}" in
         --install-pmr2)
             INSTALL_PMR2="${DIR}/server/install_pmr2.sh"
+            shift
+            ;;
+        --install-pmr2-coredata)
+            INSTALL_PMR2_COREDATA="${DIR}/server/install_pmr2_coredata.sh"
             shift
             ;;
         --install-morre)
@@ -235,6 +240,11 @@ SSH_CMD /etc/init.d/net.eth1 start
 # install PMR2
 if [ ! -z "${INSTALL_PMR2}" ]; then
     envsubst \$DIST_SERVER,\$ZOPE_USER,\$PMR_HOME < "${INSTALL_PMR2}" | SSH_CMD
+fi
+
+# install PMR2 core data
+if [ ! -z "${INSTALL_PMR2_COREDATA}" ]; then
+    envsubst \$DIST_SERVER,\$ZOPE_USER,\$PMR_HOME < "${INSTALL_PMR2_COREDATA}" | SSH_CMD
 fi
 
 # install Morre
