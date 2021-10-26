@@ -26,16 +26,26 @@ EOF
 mkdir -p /etc/portage/package.accept_keywords
 mkdir -p /etc/portage/package.mask
 mkdir -p /etc/portage/package.use
+mkdir -p /etc/portage/package.license
 
 cat << EOF > /etc/portage/package.accept_keywords/pmr2
 # omniORB
 net-misc/omniORB ~amd64
 EOF
 
+cat << EOF > /etc/portage/package.accept_keywords/zinc
+# zinc
+sci-libs/mkl ~amd64
+EOF
+
 cat << EOF > /etc/portage/package.use/mesa
 # for the opencmiss dependencies.
 media-libs/mesa X
 media-libs/libglvnd X
+EOF
+
+cat << EOF > /etc/portage/package.license/zinc
+sci-libs/mkl ISSL
 EOF
 
 # Installing build and installation dependencies plus Virtuoso
@@ -47,6 +57,7 @@ emerge --noreplace net-misc/omniORB::pmr2-overlay \
     media-libs/mesa media-libs/glu \
     dev-python/cffi media-libs/openjpeg media-libs/libjpeg-turbo \
     dev-python/virtualenv \
+    sci-libs/mkl \
     dev-db/virtuoso-odbc::pmr2-overlay \
     dev-db/virtuoso-server::pmr2-overlay \
     dev-db/virtuoso-vad-conductor::pmr2-overlay
@@ -193,7 +204,7 @@ fi
 cd "opencmiss.zinc"
 su ${ZOPE_USER} -c "virtualenv . -p /usr/bin/python${PYTHON3_VERSION}"
 su ${ZOPE_USER} -c "bin/pip install --no-index --find-links=https://dist.physiomeproject.org opencmiss.zinc"
-su ${ZOPE_USER} -c "bin/pip install opencmiss.exporter"
+su ${ZOPE_USER} -c "bin/pip install sparc-converter"
 
 
 # Set up OpenRC init scripts for PMR2
