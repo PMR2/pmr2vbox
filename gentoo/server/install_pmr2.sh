@@ -206,6 +206,18 @@ su ${ZOPE_USER} -c "virtualenv . -p /usr/bin/python${PYTHON3_VERSION}"
 su ${ZOPE_USER} -c "bin/pip install --no-index --find-links=https://dist.physiomeproject.org opencmiss.zinc"
 su ${ZOPE_USER} -c "bin/pip install sparc-converter"
 
+# flatmap SDS archive datamaker
+
+cd "${PMR_HOME}"
+if [ ! -d "flatmap-datamaker" ]; then
+    su ${ZOPE_USER} -c "mkdir flatmap-datamaker"
+fi
+cd "flatmap-datamaker"
+su ${ZOPE_USER} -c "virtualenv . -p /usr/bin/python${PYTHON3_VERSION}"
+su ${ZOPE_USER} -c "bin/pip install -U https://github.com/dbrnz/flatmap-datamaker/releases/download/0.1.0/datamaker-0.1.0-py3-none-any.whl"
+# Workaround broken certificate verify issue in 1.7.2 (or potentially later?)
+su ${ZOPE_USER} -c "bin/pip install -U pygit2==1.7.1"
+
 
 # Set up OpenRC init scripts for PMR2
 cd "${PMR_HOME}/pmr2.buildout"
