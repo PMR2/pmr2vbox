@@ -25,6 +25,20 @@ sed -i 's/^APACHE2_OPTS.*/APACHE2_OPTS="-D DEFAULT_VHOST -D INFO -D SSL -D SSL_D
 
 mkdir -p /var/log/apache2
 
+cat << EOF > /etc/apache2/modules.d/99_certbot.conf
+<Directory "/var/www/.well-known">
+        Options -Indexes
+        AllowOverride All
+        Require all granted
+        AddDefaultCharset Off
+        Header set Content-Type "text/plain"
+</Directory>
+
+ProxyPass /.well-known !
+AliasMatch ^/.well-known/acme-challenge/(.*)$ /var/www/.well-known/acme-challenge/\$1
+EOF
+
+
 cat << EOF > /etc/apache2/vhosts.d/ssl_engine.include
 ## SSL Engine Switch:
 # Enable/Disable SSL for this virtual host.
@@ -69,15 +83,6 @@ cat << EOF > /etc/apache2/vhosts.d/90_${BUILDOUT_NAME}.conf
 
     CustomLog /var/log/apache2/${HOST_FQDN}.access.log combined
 
-    ProxyPass /.well-known !
-    Alias /.well-known "/var/www/.well-known"
-    <Directory "/var/www/.well-known">
-        Require all granted
-        AllowOverride All
-        AddDefaultCharset Off
-        Header set Content-Type "text/plain"
-    </Directory>
-
     SetOutputFilter DEFLATE
     SetEnvIfNoCase Request_URI "\\.(?:gif|jpe?g|png)$" no-gzip
 
@@ -113,15 +118,6 @@ cat << EOF > /etc/apache2/vhosts.d/90_${BUILDOUT_NAME}.conf
 #         Options FollowSymLinks MultiViews
 #         AllowOverride None
 #         Require all granted
-#     </Directory>
-#
-#     ProxyPass /.well-known !
-#     Alias /.well-known "/var/www/.well-known"
-#     <Directory "/var/www/.well-known">
-#         Require all granted
-#         AllowOverride All
-#         AddDefaultCharset Off
-#         Header set Content-Type "text/plain"
 #     </Directory>
 #
 #     ErrorLog /var/log/apache2/${HOST_FQDN}-ssl.error.log
