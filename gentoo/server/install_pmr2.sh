@@ -48,6 +48,13 @@ cat << EOF > /etc/portage/package.license/zinc
 sci-libs/mkl ISSL
 EOF
 
+cat << EOF > /etc/cron.d/1virtuoso
+SHELL=/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=root
+* * * * * root /etc/init.d/virtuoso status || /etc/init.d/virtuoso restart
+EOF
+
 # Installing build and installation dependencies plus Virtuoso
 
 emerge --sync pmr2-overlay
