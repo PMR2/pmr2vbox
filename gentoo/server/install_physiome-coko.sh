@@ -100,14 +100,6 @@ cat << EOF > /etc/apache2/vhosts.d/90_physiome_coko.conf
     LogLevel warn
 
     CustomLog /var/log/apache2/${HOST_FQDN}.access.log combined
-    ProxyPass /.well-known !
-    Alias /.well-known "/var/www/.well-known"
-    <Directory "/var/www/.well-known">
-        Require all granted
-        AllowOverride All
-        AddDefaultCharset Off
-        Header set Content-Type "text/plain"
-    </Directory>
 
     SetOutputFilter DEFLATE
     SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png)$" no-gzip
@@ -132,14 +124,6 @@ cat << EOF > /etc/apache2/vhosts.d/90_physiome_coko.conf
 #         AllowOverride None
 #         Order allow,deny
 #         allow from all
-#     </Directory>
-#
-#     Alias /.well-known "/var/www/.well-known"
-#     <Directory "/var/www/.well-known">
-#         Require all granted
-#         AllowOverride All
-#         AddDefaultCharset Off
-#         Header set Content-Type "text/plain"
 #     </Directory>
 #
 #     ErrorLog /var/log/apache2/${HOST_FQDN}-ssl.error.log
