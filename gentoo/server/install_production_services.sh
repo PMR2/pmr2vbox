@@ -35,7 +35,7 @@ cat << EOF > /etc/apache2/modules.d/99_certbot.conf
 </Directory>
 
 ProxyPass /.well-known !
-AliasMatch ^/.well-known/acme-challenge/(.*)$ /var/www/.well-known/acme-challenge/\$1
+AliasMatch ^/\\.well-known/acme-challenge/(.*)$ /var/www/.well-known/acme-challenge/\$1
 EOF
 
 
