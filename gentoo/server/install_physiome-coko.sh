@@ -5,8 +5,8 @@ POSTGRESQL_VERSION=11
 
 mkdir -p /etc/portage/package.accept_keywords
 
-cat << EOF > /etc/portage/package.accept_keywords/yarn
-sys-apps/yarn ~amd64
+cat << EOF > /etc/portage/package.mask/nodejs
+>net-libs/nodejs-13
 EOF
 
 cat << EOF > /etc/portage/package.use/physiome_submission
@@ -22,7 +22,7 @@ fi
 emerge --noreplace \
     net-libs/nodejs \
     sys-apps/yarn \
-    app-emulation/docker \
+    app-containers/docker \
     app-crypt/certbot \
     www-servers/apache \
     dev-db/postgresql:${POSTGRESQL_VERSION} \
