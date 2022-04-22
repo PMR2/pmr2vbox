@@ -52,7 +52,7 @@ cat << EOF > /etc/cron.d/1virtuoso
 SHELL=/bin/bash
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 MAILTO=root
-* * * * * root /etc/init.d/virtuoso status || /etc/init.d/virtuoso restart
+* * * * * root /etc/init.d/virtuoso status && pgrep virtuoso-t || /etc/init.d/virtuoso restart
 EOF
 
 # Installing build and installation dependencies plus Virtuoso
