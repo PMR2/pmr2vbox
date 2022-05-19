@@ -2,14 +2,24 @@
 # XXX this script assumes vboxtools has been used to "activate" a
 # VirtualBox control environment.
 
-if [ ! -f /var/lib/virtuoso/db/virtuoso.db ]; then
-    # Start virtuoso and import schema
-    # XXX TODO make optional/detect whether it's been done
-    /etc/init.d/virtuoso start
-    sleep 3
-
+if [ ! -f /var/lib/virtuoso/db/.pmr2_schema ]; then
     # TODO figure out a better location than this?
-    SCHEMA_HOME=/var/lib/virtuoso/db
+    DB=/var/lib/virtuoso/db
+    SCHEMA_HOME=$(realpath ${DB})
+    INI=/var/lib/virtuoso/db/virtuoso.ini
+
+    # ensure that the realpath to the SCHEMA_HOME is usable
+    if [ ! "${SCHEMA_HOME}" == "${DB}" ]; then
+        if ! grep '^DirsAllowed.*=' "${INI}" | grep -q "${SCHEMA_HOME}" ; then
+            ORIG=$(grep '^DirsAllowed.*= \.' "${INI}")
+            sed -i "s#${ORIG}#${ORIG}, ${SCHEMA_HOME}#" "${INI}"
+        fi
+    fi
+
+    # restart virtuoso and import schema
+    echo "restarting virtuoso with any configuration changes"
+    /etc/init.d/virtuoso restart
+    sleep 3
 
     SCHEMA_FILES="
     celltype.owl
@@ -23,7 +33,7 @@ if [ ! -f /var/lib/virtuoso/db/virtuoso.db ]; then
 
     for file in ${SCHEMA_FILES}; do
         if [ ! -f "${SCHEMA_HOME}/${file}" ]; then
-            wget ${DIST_SERVER}/schema/${file} -O "${SCHEMA_HOME}/${file}"
+            wget -c ${DIST_SERVER}/schema/${file} -O "${SCHEMA_HOME}/${file}"
         fi
     done
 
@@ -40,4 +50,8 @@ if [ ! -f /var/lib/virtuoso/db/virtuoso.db ]; then
 	rdfs_rule_set('ricordo_rule', 'http://namespaces.physiomeproject.org/ricordo-schema.rdf');
 	rdfs_rule_set('ricordo_rule', 'http://namespaces.physiomeproject.org/ricordo-sbml-schema.rdf');
 	EOF
+
+    touch "${DB}/.pmr2_schema"
+else
+    echo "virtuoso assumed to have been created and schema imported; skipping"
 fi
