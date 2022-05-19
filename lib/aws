@@ -56,6 +56,7 @@ role_policy_tmpl='{
             "s3:GetObject"
          ],
          "Resource":[
+            "arn:aws:s3:::${S3_BUCKET}",
             "arn:aws:s3:::${S3_BUCKET}/*"
          ]
       },
