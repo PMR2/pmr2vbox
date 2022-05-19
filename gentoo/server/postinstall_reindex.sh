@@ -79,20 +79,22 @@ if code == 0:
 print('')
 EOF
 
-# TODO reindex exposure files
-# TODO optional rebuild of all exposures, though this need is diminished
-# if/when dynamically generated views are done
-su ${ZOPE_USER} -c "bin/instance-deploy debug" << EOF
+su ${ZOPE_USER} -c "bin/instance-deploy debug" << EOF > /dev/null
+import sys
 import zope.component
 from zope.component.hooks import setSite
 from zope.annotation import IAnnotations
+from pmr2.app.annotation.factory import has_note
+from pmr2.app.annotation.interfaces import IExposureFileAnnotator
 from pmr2.virtuoso.interfaces import IWorkspaceRDFIndexer
 from morre.pmr2.interfaces import IMorreServer
 import transaction
 
 setSite(app.pmr)
 catalog = app.pmr.portal_catalog
-virtuoso_workspace_count = morre_exposure_file_count = 0
+virtuoso_workspace_count = 0
+virtuoso_exposure_file_count = 0
+morre_exposure_file_count = 0
 
 for b in catalog(portal_type='Workspace'):
     obj = b.getObject()
@@ -106,6 +108,14 @@ for b in catalog(portal_type='Workspace'):
     else:
         virtuoso_workspace_count += 1
 
+for b in catalog(portal_type='ExposureFile'):
+    obj = b.getObject()
+    if not has_note(obj, 'virtuoso_rdf'):
+        continue
+    _ = zope.component.getUtility(
+        IExposureFileAnnotator, name='virtuoso_rdf')(obj, None).generate()
+    virtuoso_exposure_file_count += 1
+
 morre_server = zope.component.queryUtility(IMorreServer)
 if morre_server and morre_server.index_on_wfstate:
     morre_server.path_to_njid.clear()
@@ -117,6 +127,10 @@ if morre_server and morre_server.index_on_wfstate:
             morre_exposure_file_count += 1
 
 transaction.commit()
-print("%d workspaces exported RDF to Virtuoso" % virtuoso_workspace_count)
-print("%d exposure file reindexed by Morre" % morre_exposure_file_count)
+sys.stderr.write('\n'.join([
+    "%d workspaces exported RDF to Virtuoso" % virtuoso_workspace_count,
+    "%d exposure file virtuoso_rdf reindexed" % virtuoso_exposure_file_count,
+    "%d exposure file reindexed by Morre" % morre_exposure_file_count,
+    ''
+]))
 EOF
