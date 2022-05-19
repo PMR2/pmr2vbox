@@ -14,34 +14,70 @@ timeout=10
 echo "waiting ${timeout} seconds for services to finish starting..."
 sleep ${timeout}
 
-echo -n "attempting to change default dba password for virtuoso... "
+echo -n "attempting to configure access to virtuoso... "
 su ${ZOPE_USER} -c "bin/instance-deploy debug" << EOF | grep OKAY > /dev/null
+import sys
 from subprocess import Popen, PIPE
 from zope.component import getUtility
 from zope.component.hooks import setSite
 from pmr2.app.settings.interfaces import IPMR2GlobalSettings
 from pmr2.virtuoso.interfaces import ISettings
 
+def test_login(login, password):
+    p = Popen(['${ISQL_V}', '-U', login, '-P', password],
+        stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    out, err = p.communicate(u'STATUS();\\n')
+    return p.returncode == 0
+
 setSite(app.pmr)
 pmr2_settings = getUtility(IPMR2GlobalSettings)
 virtuoso_settings = ISettings(pmr2_settings)
+login, password = virtuoso_settings.user, virtuoso_settings.password
 
-# XXX assuming user is dba
-# TODO create user if user is not 'dba'
-cmd = 'set password dba %s;\\ncheckpoint;\\n' % virtuoso_settings.password
-p = Popen(['${ISQL_V}'], stdin=PIPE, stdout=PIPE)
-out, err = p.communicate(cmd.encode('utf8'))
+def main():
+    if test_login(login, password):
+        return 0, (
+            'pmr2 provided credentials valid',
+        )
+    elif login != 'dba':
+        return 1, (
+            'automatic configuration only supports the default "dba" user;',
+            'either set "pmr2.virtuoso.interfaces.ISettings.user" to "dba"',
+            'or reference the stored credentials and create the login in '
+            'virtuoso',
+        )
+    if not test_login('dba', 'dba'):
+        return 1, (
+            'cannot login with default or configured credentials found '
+            'in pmr2 settings;',
+            'please either recreate the virtuoso database or correct the login '
+            'credentials'
+        )
+    #
+    cmd = u'set password dba %s;\\ncheckpoint;\\n' % password
+    p = Popen(['${ISQL_V}'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    out, err = p.communicate(cmd.encode('utf8'))
+    if len([o for o in out.split() if o == 'Done.']) == 2:
+        return 0, (
+            'modified password for "dba" to match pmr2 settings',
+        )
+    return 1, (
+        'failed to configure password for virtuoso to match pmr2 settings',
+    )
 
-# string based workaround because sys.exit does not work within debug shell
-if 'Done' in out:
+code, msg = main()
+sys.stderr.write('\\n'.join(msg))
+sys.stderr.write('\\n')
+# can't do this inside this interpreter it does not work within debug shell
+# sys.exit(code)
+if code == 0:
+    # use a string based workaround, see the grep above.
     print('OKAY')
 
 # to ensure the above if statement also get executed because zopepy can
 # be buggy with trailing if/indented statements?
 print('')
-
 EOF
-echo "done"
 
 # TODO reindex exposure files
 # TODO optional rebuild of all exposures, though this need is diminished
