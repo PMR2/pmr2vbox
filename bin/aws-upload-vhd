@@ -7,18 +7,23 @@ BASENAME=$(basename ${BASH_SOURCE[0]})
 
 source $DIR/../lib/aws
 
+if (( $# < 2 )); then
+    warn "usage: ${BASENAME} S3_BUCKET UPLOAD_IMG [ADDITIONAL_IMG ...]"
+    warn ""
+    warn "attempt to upload the specified .vhd image file(s) with aws to the "
+    warn "s3 bucket, where the first image will serve as the root partition "
+    warn "for the AMI to be created."
+    exit 2
+fi
+
 export S3_BUCKET="${1}"
 shift
 export UPLOAD_IMG="${1}"
 shift
 export ADDITIONAL_IMGS=("${@}")
 
-if [ -z "${UPLOAD_IMG}" ] || [ -z "${S3_BUCKET}" ]; then
-    warn "usage: ${BASENAME} S3_BUCKET UPLOAD_IMG [ADDITIONAL_IMG ...]"
-    warn ""
-    warn "attempt to upload the specified .vhd image file(s) with aws to the "
-    warn "s3 bucket, where the first image will serve as the root partition "
-    warn "for the AMI to be created."
+if [[ ! -f "${UPLOAD_IMG}" ]]; then
+    warn "UPLOAD_IMG '${UPLOAD_IMG}' is not a file; aborting"
     exit 2
 fi
 
@@ -29,6 +34,10 @@ export AMI_SNAPSHOT_ID=${EC2_SNAPSHOT}
 
 ADDITIONAL_AMI_SNAPSHOT_IDS=()
 for additional_img in "${ADDITIONAL_IMGS[@]}"; do
+    if [[ ! -f "${additional_img}" ]]; then
+        warn "'${additional_img}' is not a file; aborting"
+        exit 2
+    fi
     upload_to_ec2_snapshot "${additional_img}"
     ADDITIONAL_AMI_SNAPSHOT_IDS+=("${EC2_SNAPSHOT}")
 done
