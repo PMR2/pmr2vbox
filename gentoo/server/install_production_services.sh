@@ -25,6 +25,12 @@ sed -i 's/^APACHE2_OPTS.*/APACHE2_OPTS="-D DEFAULT_VHOST -D INFO -D SSL -D SSL_D
 
 mkdir -p /var/log/apache2
 
+cat << EOF > /etc/apache2/modules.d/99_headers.conf
+Header unset Server
+Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+Header set X-Content-Type-Options "nosniff"
+EOF
+
 cat << EOF > /etc/apache2/modules.d/99_certbot.conf
 <Directory "/var/www/.well-known">
         Options -Indexes
@@ -47,19 +53,21 @@ SSLEngine on
 ## SSLProtocol:
 # Don't use SSLv2 anymore as it's considered to be broken security-wise.
 # Also disable SSLv3 as most modern browsers are capable of TLS.
-SSLProtocol ALL -SSLv2 -SSLv3
+SSLProtocol ALL -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
 
 ## SSL Cipher Suite:
 # List the ciphers that the client is permitted to negotiate.
 # See the mod_ssl documentation for a complete list.
 # This list of ciphers is recommended by mozilla and was stripped off
 # its RC4 ciphers. (bug #506924)
-SSLCipherSuite ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128:AES256:HIGH:!RC4:!aNULL:!eNULL:!EXPORT:!DES:!3DES:!MD5:!PSK
+SSLCipherSuite          ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305
+
 
 ## SSLHonorCipherOrder:
 # Prefer the server's cipher preference order as the client may have a
 # weak default order.
 SSLHonorCipherOrder On
+SSLSessionTickets Off
 EOF
 
 cat << EOF > /etc/apache2/vhosts.d/90_${BUILDOUT_NAME}.conf
