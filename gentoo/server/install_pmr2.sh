@@ -181,7 +181,7 @@ chown ${ZOPE_USER}:${ZOPE_USER} /home/${ZOPE_USER}/.bashrc
 
 # virtualenv zc.buildout
 # need to bootstrap a sane virtualenv for python 2
-su ${ZOPE_USER} -c "virtualenv bootstrap -p /usr/bin/python2.7"
+su ${ZOPE_USER} -c "virtualenv bootstrap"
 su ${ZOPE_USER} -c "bootstrap/bin/python -m pip install 'virtualenv<20'"
 su ${ZOPE_USER} -c "bootstrap/bin/virtualenv . -p /usr/bin/python2.7"
 # TODO extract setuptools version from the buildout config that has it

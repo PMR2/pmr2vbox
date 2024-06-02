@@ -41,15 +41,17 @@ cd cellml.site
 
 # virtualenv zc.buildout
 # need to bootstrap a sane virtualenv for python 2
-su ${ZOPE_USER} -c "virtualenv bootstrap -p /usr/bin/python2.7"
-su ${ZOPE_USER} -c "bootstrap/bin/python -m pip install 'virtualenv<20'"
-su ${ZOPE_USER} -c "bootstrap/bin/virtualenv . -p /usr/bin/python2.7"
+if [ ! -d bootstrap ]; then
+    su ${CELLML_USER} -c "virtualenv bootstrap"
+    su ${CELLML_USER} -c "bootstrap/bin/python -m pip install 'virtualenv<20'"
+    su ${CELLML_USER} -c "bootstrap/bin/virtualenv . -p /usr/bin/python2.7"
+fi
 # TODO extract setuptools version from the buildout config that has it
-su ${CELLML_USER} -c "bin/pip install -U zc.buildout==1.7.1 setuptools==26.1.1"
+su ${ZOPE_USER} -c "bin/pip install -U zc.buildout==1.7.1 setuptools==36.8.0"
 
 # TODO figure out how to specify options/customize a base set of options
 # su ${CELLML_USER} -c "bin/buildout -c buildout-git.cfg"
-su ${CELLML_USER} -c "bin/buildout -c deploy-all.cfg"
+su ${CELLML_USER} -c "bin/buildout -c deploy-all.cfg -vvv"
 
 # Set up OpenRC init scripts for CellML zope/plone instances
 

@@ -12,6 +12,9 @@ export DIST_SERVER=${DIST_SERVER:-"https://${BACKUP_HOST}"}
 export CELLML_USER=${ZOPE_USER:-"zope"}
 export CELLML_HOME=${CELLML_HOME:-"/home/${CELLML_USER}"}
 
+# do NOT set this to www.cellml.org - postfix etc
+# Note that this impacts on the reverse proxy line, which means the www.
+# will need to be added back in.
 export HOST_FQDN=${HOST_FQDN:-"cellml.org"}
 
 export CELLML_DATA_READ_KEY=${CELLML_DATA_READ_KEY:-"${DIR}/cellml_key"}
