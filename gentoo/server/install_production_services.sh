@@ -36,6 +36,7 @@ cat << EOF > /etc/apache2/modules.d/99_headers.conf
 Header unset Server
 Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options: "sameorigin"
 EOF
 
 cat << EOF > /etc/apache2/modules.d/99_certbot.conf
@@ -148,10 +149,10 @@ cat << EOF > /etc/apache2/vhosts.d/90_${BUILDOUT_NAME}.conf
 #     SSLCertificateKeyFile /etc/letsencrypt/live/${HOST_FQDN}/privkey.pem
 #     SSLCertificateFile /etc/letsencrypt/live/${HOST_FQDN}/fullchain.pem
 #
-#     Header onsuccess edit Set-Cookie (.*) "\$1;Secure"
+#     Header edit Set-Cookie ^(.*)\$ "\$1; HttpOnly; Secure; SameSite=Strict"
 #
 #     SetOutputFilter DEFLATE
-#     SetEnvIfNoCase Request_URI "\\.(?:gif|jpe?g|png)$" no-gzip
+#     SetEnvIfNoCase Request_URI "\\.(?:gif|jpe?g|png)\$" no-gzip
 #     SetEnv proxy-sendcl 1
 #
 #     RewriteEngine On
