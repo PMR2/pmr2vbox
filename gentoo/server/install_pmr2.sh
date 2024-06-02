@@ -38,6 +38,11 @@ cat << EOF > /etc/portage/package.accept_keywords/zinc
 sci-libs/mkl ~amd64
 EOF
 
+cat << EOF > /etc/portage/package.mask/mkl
+# limiting to this version that works (to save disk usage)
+>sci-libs/mkl-2020.4.304
+EOF
+
 cat << EOF > /etc/portage/package.use/mesa
 # for the opencmiss dependencies.
 media-libs/mesa X osmesa
