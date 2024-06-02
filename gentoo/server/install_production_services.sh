@@ -3,8 +3,15 @@ set -e
 
 emerge --noreplace \
     mail-mta/postfix \
-    www-servers/apache \
-    app-crypt/certbot
+    www-servers/apache
+
+# certbot installation previously was done with emerge, but dependencies
+# involved now includes Rust (for the crytpography bindings), resulting
+# in extra storage and time usage.  Until we have more things in Rust,
+# opting to use a /opt global virtualenv and use wheels for that.
+
+virtualenv /opt
+/opt/bin/pip install certbot
 
 # Postfix setup
 
@@ -163,9 +170,9 @@ cat << EOF > /etc/cron.weekly/certbot
 set -e
 
 # Certificate must be issued first before it may be renewed
-# certbot certonly --webroot -w /var/www -d ${HOST_FQDN}
+# /opt/bin/certbot certonly --webroot -w /var/www -d ${HOST_FQDN}
 
-certbot renew
+/opt/bin/certbot renew
 /etc/init.d/apache2 reload
 EOF
 chmod +x /etc/cron.weekly/certbot
