@@ -1,13 +1,7 @@
 #!/bin/bash
 set -e
 
-cat << EOF > /etc/portage/package.accept_keywords/java
-=dev-java/icedtea-3.21.0::gentoo ~amd64
-EOF
-
 cat << EOF > /etc/portage/package.mask/java
->=dev-java/openjdk-bin-9
->=dev-java/openjdk-9
 EOF
 
 # This assumes the "cups" USE flag is not enabled; otherwise certain
@@ -18,7 +12,7 @@ emerge --noreplace \
 # add TOMCAT_SUFFIX when it is required.
 TOMCAT_WAR_ROOT="/var/lib/tomcat-${TOMCAT_VERSION}/webapps"
 TOMCAT_WARS="
-BiVeS-WS-1.3.9.1.war
+BiVeS-WebApp-1.10.16.war
 "
 
 if [ ! -d "${TOMCAT_WAR_ROOT}" ]; then
