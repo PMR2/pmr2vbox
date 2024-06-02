@@ -24,6 +24,7 @@ mydestination = \$myhostname, localhost.\$mydomain, localhost, \$mydomain,
 mynetworks_style = host
 EOF
 
+newaliases
 rc-update add postfix default
 
 # Apache setup.
