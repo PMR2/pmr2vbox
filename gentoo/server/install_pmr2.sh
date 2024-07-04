@@ -65,7 +65,7 @@ EOF
 emerge --sync pmr2-overlay
 emerge --noreplace dev-lang/python:2.7 dev-lang/python:${PYTHON3_VERSION}
 emerge --noreplace net-misc/omniORB::pmr2-overlay \
-    dev-util/cmake dev-db/unixODBC \
+    dev-build/cmake dev-db/unixODBC \
     media-libs/mesa media-libs/glu \
     dev-python/cffi media-libs/openjpeg media-libs/libjpeg-turbo \
     dev-python/virtualenv \
@@ -187,7 +187,7 @@ chown ${ZOPE_USER}:${ZOPE_USER} /home/${ZOPE_USER}/.bashrc
 # virtualenv zc.buildout
 # need to bootstrap a sane virtualenv for python 2
 su ${ZOPE_USER} -c "virtualenv bootstrap"
-su ${ZOPE_USER} -c "bootstrap/bin/python -m pip install 'virtualenv<20'"
+su ${ZOPE_USER} -c "bootstrap/bin/python -m pip install 'virtualenv<20' setuptools"
 su ${ZOPE_USER} -c "bootstrap/bin/virtualenv . -p /usr/bin/python2.7"
 # TODO extract setuptools version from the buildout config that has it
 su ${ZOPE_USER} -c "bin/pip install -U zc.buildout==1.7.1 setuptools==36.8.0"

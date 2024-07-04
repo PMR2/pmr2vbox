@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# JDK 11 or greater not supported by neo4j
+emerge --noreplace dev-java/openjdk-bin:8
+
 MORRE_DEP_JARS="
 activation-1.1.jar
 aopalliance-1.0.jar
@@ -203,6 +206,9 @@ PIDFILE=\${NEO4J_HOME}/run/neo4j.pid
 [ -f \$SCRIPT ] || eend 1
 
 DAEMON=\$SCRIPT
+
+# assume this JVM is installed.
+export JAVA_HOME=/usr/lib/jvm/openjdk-bin-8
 
 depend() {
     need net

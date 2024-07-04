@@ -4,6 +4,10 @@ set -e
 cat << EOF > /etc/portage/package.mask/java
 EOF
 
+cat << EOF > /etc/portage/package.license/bives
+dev-java/osgi-cmpn OSGi-Specification-2.0
+EOF
+
 # This assumes the "cups" USE flag is not enabled; otherwise certain
 # packages may require other explicit USE flag assignments.
 emerge --noreplace \

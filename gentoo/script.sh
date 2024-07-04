@@ -19,7 +19,7 @@ export BACKUP_USER=${BACKUP_USER:-"pmrdemo"}
 export DIST_SERVER=${DIST_SERVER:-"https://${BACKUP_HOST}"}
 export JARS_SERVER=${JARS_SERVER:-"${DIST_SERVER}/jars"}
 export NEO4J_VERSION=${NEO4J_VERSION-"neo4j-community-3.0.1"}
-export TOMCAT_VERSION=${TOMCAT_VERSION:-"8.5"}
+export TOMCAT_VERSION=${TOMCAT_VERSION:-"10.1"}
 
 # TODO figure out usage of TOMCAT_SUFFIX and whether it is applicable
 # without complicating things.
