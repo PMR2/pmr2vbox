@@ -57,6 +57,14 @@ alias SSH_CMD="ssh -oStrictHostKeyChecking=no -oBatchMode=Yes -i \"${VBOX_PRIVKE
 
 export BUILDOUT_ROOT="${PMR_HOME}/${BUILDOUT_NAME}"
 
+sync_world () {
+    # restore from backup
+    SSH_CMD <<- EOF
+	emerge --sync
+	emerge --update --deep --newuse @world
+	EOF
+}
+
 restore_pmr2_backup () {
     if [ ! -z "${SETUP_AS_PROD}" ]; then
         local prod_root_mounted=$(SSH_CMD "mount | grep \"${PROD_ROOT}\"")
@@ -196,6 +204,10 @@ fi
 while [[ $# > 0 ]]; do
     opt="$1"
     case "${opt}" in
+        --sync-world)
+            SYNC_WORLD=1
+            shift
+            ;;
         --install-pmr2)
             INSTALL_PMR2="${DIR}/server/install_pmr2.sh"
             shift
@@ -236,6 +248,11 @@ done
 
 # prepare local ssh-agent and outbound connection
 SSH_CMD /etc/init.d/net.eth1 start
+
+# emerge sync and update @world
+if [ ! -z "${SYNC_WORLD}" ]; then
+    sync_world
+fi
 
 # install PMR2
 if [ ! -z "${INSTALL_PMR2}" ]; then
