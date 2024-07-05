@@ -53,13 +53,6 @@ cat << EOF > /etc/portage/package.license/zinc
 sci-libs/mkl ISSL
 EOF
 
-cat << EOF > /etc/cron.d/1virtuoso
-SHELL=/bin/bash
-PATH=/sbin:/bin:/usr/sbin:/usr/bin
-MAILTO=root
-* * * * * root /etc/init.d/virtuoso status && pgrep virtuoso-t || /etc/init.d/virtuoso restart
-EOF
-
 # Installing build and installation dependencies plus Virtuoso
 
 emerge --sync pmr2-overlay
@@ -154,7 +147,6 @@ if ! grep -e '^\[VOS\]' "${ODBC_INI}" 2>/dev/null >/dev/null; then
 fi
 
 chmod +x /etc/init.d/virtuoso
-rc-update add virtuoso default
 
 # Install PMR2
 
@@ -261,6 +253,3 @@ PMR_PROFILE=deploy \
 
 chmod +x /etc/init.d/pmr2.instance
 chmod +x /etc/init.d/pmr2.zeoserver
-
-rc-update add pmr2.zeoserver default
-rc-update add pmr2.instance default

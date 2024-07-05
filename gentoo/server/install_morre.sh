@@ -246,4 +246,3 @@ restart() {
 EOF
 
 chmod +x /etc/init.d/morre.pmr2
-rc-update add morre.pmr2 default

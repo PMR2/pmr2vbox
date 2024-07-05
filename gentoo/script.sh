@@ -226,7 +226,7 @@ if [ $# = 0 ]; then
     INSTALL_MORRE="${DIR}/server/install_morre.sh"
     INSTALL_BIVES="${DIR}/server/install_bives.sh"
     INSTALL_PRODSERVICE="${DIR}/server/install_production_services.sh"
-    CONFIGURE_PRODSERVICE="${DIR}/server/configure_production_services.sh"
+    CONFIGURE_SERVICE="${DIR}/server/configure_services.sh"
     RESTORE_BACKUP=${RESTORE_BACKUP:-1}
 fi
 
@@ -237,9 +237,8 @@ while [[ $# > 0 ]]; do
             SYNC_WORLD=1
             shift
             ;;
-        --install)
+        --base-install)
             INSTALL_PMR2="${DIR}/server/install_pmr2.sh"
-            INSTALL_PMR2_COREDATA="${DIR}/server/install_pmr2_coredata.sh"
             INSTALL_MORRE="${DIR}/server/install_morre.sh"
             INSTALL_BIVES="${DIR}/server/install_bives.sh"
             INSTALL_PRODSERVICE="${DIR}/server/install_production_services.sh"
@@ -265,12 +264,12 @@ while [[ $# > 0 ]]; do
             INSTALL_PRODSERVICE="${DIR}/server/install_production_services.sh"
             shift
             ;;
-        --configure-production)
-            CONFIGURE_PRODSERVICE="${DIR}/server/configure_production_services.sh"
+        --configure-services)
+            CONFIGURE_SERVICE="${DIR}/server/configure_services.sh"
             shift
             ;;
         --setup-as-production)
-            CONFIGURE_PRODSERVICE="${DIR}/server/configure_production_services.sh"
+            CONFIGURE_SERVICE="${DIR}/server/configure_services.sh"
             export SETUP_AS_PROD=1
             shift
             ;;
@@ -332,8 +331,8 @@ if [ ! -z "${INSTALL_PRODSERVICE}" ]; then
 fi
 
 # configure production services for usage.
-if [ ! -z "${CONFIGURE_PRODSERVICE}" ]; then
-    envsubst \${BUILDOUT_NAME},\$HOST_FQDN,\$BUILDOUT_ROOT,\$ZOPE_INSTANCE_PORT,\$SITE_ROOT < "${CONFIGURE_PRODSERVICE}" | SSH_CMD
+if [ ! -z "${CONFIGURE_SERVICE}" ]; then
+    envsubst \${BUILDOUT_NAME},\$HOST_FQDN,\$BUILDOUT_ROOT,\$ZOPE_INSTANCE_PORT,\$SITE_ROOT,\$TOMCAT_VERSION < "${CONFIGURE_SERVICE}" | SSH_CMD
 fi
 
 # restore backup

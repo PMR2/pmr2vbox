@@ -24,8 +24,6 @@ if [ ! -d "${TOMCAT_WAR_ROOT}" ]; then
         --create
 fi
 
-rc-update add tomcat-${TOMCAT_VERSION} default
-
 sed -i 's/^#CATALINA_TMPDIR=/CATALINA_TMPDIR=/' \
     /etc/conf.d/tomcat-${TOMCAT_VERSION}
 mkdir -p /var/tmp/tomcat-${TOMCAT_VERSION}
