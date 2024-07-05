@@ -65,6 +65,37 @@ sync_world () {
 	EOF
 }
 
+prep_prod () {
+    SSH_CMD <<- EOF
+	if [ ! -L "${PMR_HOME}/pmr2.buildout/var/filestorage/" ]; then
+	    rm -rf "${PMR_HOME}/pmr2.buildout/var/filestorage"
+	    ln -s "${PROD_ROOT}/var/filestorage" "${PMR_HOME}/pmr2.buildout/var/filestorage"
+	fi
+
+	if [ ! -L "${PMR_HOME}/pmr2.buildout/var/blobstorage/" ]; then
+	    rm -rf "${PMR_HOME}/pmr2.buildout/var/blobstorage"
+	    ln -s "${PROD_ROOT}/var/blobstorage" "${PMR_HOME}/pmr2.buildout/var/blobstorage"
+	fi
+
+	if [ ! -L "${PMR_HOME}/neo4j-community-3.0.1/data" ]; then
+	    rm -rf "${PMR_HOME}/neo4j-community-3.0.1/data"
+	    ln -s "${PROD_ROOT}/var/lib/neo4j/data" "${PMR_HOME}/neo4j-community-3.0.1/data"
+	fi
+
+	if [ ! -L "${PMR_HOME}/pmr2" ]; then
+	    rm -rf "${PMR_HOME}/pmr2"
+	    ln -s "${PROD_ROOT}/pmr2" "${PMR_HOME}/pmr2"
+	fi
+
+	if [ ! -L "/var/lib/virtuoso/db" ]; then
+	    rm -rf /var/lib/virtuoso/db
+	    ln -s "${PROD_ROOT}/var/lib/virtuoso/db" /var/lib/virtuoso/db
+	fi
+
+	mkdir -p "${PROD_ROOT}"
+	EOF
+}
+
 restore_pmr2_backup () {
     if [ ! -z "${SETUP_AS_PROD}" ]; then
         local prod_root_mounted=$(SSH_CMD "mount | grep \"${PROD_ROOT}\"")
@@ -114,18 +145,20 @@ restore_pmr2_backup () {
 	/etc/init.d/morre.pmr2 stop
 
         if [ ! -L "${PMR_HOME}/pmr2.buildout/var/filestorage/" ]; then
-            rm -rf "${PMR_HOME}/pmr2.buildout/var/filestorage/"
+            rm -rf "${PMR_HOME}/pmr2.buildout/var/filestorage"
             ln -s "${PROD_ROOT}/var/filestorage" "${PMR_HOME}/pmr2.buildout/var/filestorage"
             chown -h ${ZOPE_USER}:${ZOPE_USER} "${PMR_HOME}/pmr2.buildout/var/filestorage"
         fi
         su - ${ZOPE_USER} -c "mkdir -p \"${PROD_ROOT}/var/filestorage\" "
+        su - ${ZOPE_USER} -c "chmod 700 \"${PROD_ROOT}/var/filestorage\" "
 
         if [ ! -L "${PMR_HOME}/pmr2.buildout/var/blobstorage/" ]; then
-            rm -rf "${PMR_HOME}/pmr2.buildout/var/blobstorage/"
+            rm -rf "${PMR_HOME}/pmr2.buildout/var/blobstorage"
             ln -s "${PROD_ROOT}/var/blobstorage" "${PMR_HOME}/pmr2.buildout/var/blobstorage"
             chown -h ${ZOPE_USER}:${ZOPE_USER} "${PMR_HOME}/pmr2.buildout/var/blobstorage"
         fi
         su - ${ZOPE_USER} -c "mkdir -p \"${PROD_ROOT}/var/blobstorage\" "
+        su - ${ZOPE_USER} -c "chmod 700 \"${PROD_ROOT}/var/blobstorage\" "
 
         if [ ! -L "${PMR_HOME}/neo4j-community-3.0.1/data" ]; then
             rm -rf "${PMR_HOME}/neo4j-community-3.0.1/data"
@@ -136,7 +169,7 @@ restore_pmr2_backup () {
 
         if [ ! -L "${PMR_HOME}/pmr2" ]; then
             rm -rf "${PMR_HOME}/pmr2"
-            ln -s "${PMR_DATA_ROOT}" "${PMR_HOME}/pmr2"
+            ln -s "${PROD_ROOT}/pmr2" "${PMR_HOME}/pmr2"
         fi
 
         if [ ! -L "/var/lib/virtuoso/db" ]; then
@@ -198,7 +231,7 @@ if [ $# = 0 ]; then
     INSTALL_MORRE="${DIR}/server/install_morre.sh"
     INSTALL_BIVES="${DIR}/server/install_bives.sh"
     INSTALL_PRODSERVICE="${DIR}/server/install_production_services.sh"
-    RESTORE_BACKUP=1
+    RESTORE_BACKUP=${RESTORE_BACKUP:-1}
 fi
 
 while [[ $# > 0 ]]; do
@@ -285,6 +318,10 @@ if [ ! -z "${RESTORE_BACKUP}" ]; then
         echo "skipping backup restore; PMR_DATA_READ_KEY undefined"
     else
         restore_pmr2_backup
+    fi
+else
+    if [ ! -z "${SETUP_AS_PROD}" ]; then
+        prep_prod
     fi
 fi
 
