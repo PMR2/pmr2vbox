@@ -220,12 +220,13 @@ restore_pmr2_backup () {
 
 
 if [ $# = 0 ]; then
-    # enable all local commands/shortcuts
+    # enable options to build example instance with a minimal dataset
     INSTALL_PMR2="${DIR}/server/install_pmr2.sh"
     INSTALL_PMR2_COREDATA="${DIR}/server/install_pmr2_coredata.sh"
     INSTALL_MORRE="${DIR}/server/install_morre.sh"
     INSTALL_BIVES="${DIR}/server/install_bives.sh"
     INSTALL_PRODSERVICE="${DIR}/server/install_production_services.sh"
+    CONFIGURE_PRODSERVICE="${DIR}/server/configure_production_services.sh"
     RESTORE_BACKUP=${RESTORE_BACKUP:-1}
 fi
 
@@ -234,6 +235,14 @@ while [[ $# > 0 ]]; do
     case "${opt}" in
         --sync-world)
             SYNC_WORLD=1
+            shift
+            ;;
+        --install)
+            INSTALL_PMR2="${DIR}/server/install_pmr2.sh"
+            INSTALL_PMR2_COREDATA="${DIR}/server/install_pmr2_coredata.sh"
+            INSTALL_MORRE="${DIR}/server/install_morre.sh"
+            INSTALL_BIVES="${DIR}/server/install_bives.sh"
+            INSTALL_PRODSERVICE="${DIR}/server/install_production_services.sh"
             shift
             ;;
         --install-pmr2)
@@ -256,7 +265,12 @@ while [[ $# > 0 ]]; do
             INSTALL_PRODSERVICE="${DIR}/server/install_production_services.sh"
             shift
             ;;
+        --configure-production)
+            CONFIGURE_PRODSERVICE="${DIR}/server/configure_production_services.sh"
+            shift
+            ;;
         --setup-as-production)
+            CONFIGURE_PRODSERVICE="${DIR}/server/configure_production_services.sh"
             export SETUP_AS_PROD=1
             shift
             ;;
@@ -312,9 +326,14 @@ if [ ! -z "${INSTALL_BIVES}" ]; then
     envsubst \$DIST_SERVER,\$TOMCAT_VERSION,\$TOMCAT_USER < "${INSTALL_BIVES}" | SSH_CMD
 fi
 
-# install and setup for production
+# install additional services used in production
 if [ ! -z "${INSTALL_PRODSERVICE}" ]; then
-    envsubst \${BUILDOUT_NAME},\$HOST_FQDN,\$BUILDOUT_ROOT,\$ZOPE_INSTANCE_PORT,\$SITE_ROOT < "${INSTALL_PRODSERVICE}" | SSH_CMD
+    envsubst \$DIST_SERVER < "${INSTALL_PRODSERVICE}" | SSH_CMD
+fi
+
+# configure production services for usage.
+if [ ! -z "${CONFIGURE_PRODSERVICE}" ]; then
+    envsubst \${BUILDOUT_NAME},\$HOST_FQDN,\$BUILDOUT_ROOT,\$ZOPE_INSTANCE_PORT,\$SITE_ROOT < "${CONFIGURE_PRODSERVICE}" | SSH_CMD
 fi
 
 # restore backup
