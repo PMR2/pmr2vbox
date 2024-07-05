@@ -231,6 +231,14 @@ su ${ZOPE_USER} -c "bin/pip install -U https://github.com/dbrnz/flatmap-datamake
 # Workaround broken certificate verify issue in 1.7.2 (or potentially later?)
 su ${ZOPE_USER} -c "bin/pip install -U pygit2==1.7.1"
 
+# store key locations in conf.d
+
+cat << EOF > /etc/conf.d/pmr2
+# Default locations
+INSTANCE_HOME=${PMR_HOME}/pmr2.buildout
+ZEOSERVER_HOME=${PMR_HOME}/pmr2.buildout
+BACKUP_DIR=${PMR_ZEO_BACKUP}
+EOF
 
 # Set up OpenRC init scripts for PMR2
 cd "${PMR_HOME}/pmr2.buildout"

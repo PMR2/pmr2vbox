@@ -34,8 +34,8 @@ export SITE_ROOT=${SITE_ROOT:-"pmr"}
 export HOST_FQDN=${HOST_FQDN:-"pmr.example.com"}
 
 export PMR_DATA_READ_KEY=${PMR_DATA_READ_KEY:-"${DIR}/pmrdemo_key"}
-export PMR_DATA_ROOT=${PMR_DATA_ROOT:-"${PMR_HOME}/pmr2"}
-export PMR_ZEO_BACKUP=${PMR_ZEO_BACKUP:-"${PMR_HOME}/backup"}
+# export PMR_DATA_ROOT=${PMR_DATA_ROOT:-"${PMR_HOME}/pmr2"}
+# export PMR_ZEO_BACKUP=${PMR_ZEO_BACKUP:-"${PMR_HOME}/backup"}
 
 export ZOPE_INSTANCE_PORT=${ZOPE_INSTANCE_PORT:-"8280"}
 
@@ -179,11 +179,6 @@ restore_pmr2_backup () {
         fi
 	EOF
 
-        # TODO deal with PMR_DATA_ROOT more correctly?
-        # Doing it this way simply due to how production data is typically
-        # organized.
-        export PMR_DATA_ROOT="${PROD_ROOT}/pmr2"
-        export PMR_ZEO_BACKUP="${PROD_ROOT}/backup"
     fi
 
 
@@ -282,6 +277,16 @@ done
 # prepare local ssh-agent and outbound connection
 SSH_CMD /etc/init.d/net.eth1 start
 
+if [ ! -z "${SETUP_AS_PROD}" ]; then
+    # Doing it this way simply due to how production data is
+    # typically organized.
+    export PMR_DATA_ROOT=${PMR_DATA_ROOT:-"${PMR_ROOT}/pmr2"}
+    export PMR_ZEO_BACKUP=${PMR_ZEO_BACKUP:-"${PMR_ROOT}/backup"}
+else
+    export PMR_DATA_ROOT=${PMR_DATA_ROOT:-"${PMR_HOME}/pmr2"}
+    export PMR_ZEO_BACKUP=${PMR_ZEO_BACKUP:-"${PMR_HOME}/backup"}
+fi
+
 # emerge sync and update @world
 if [ ! -z "${SYNC_WORLD}" ]; then
     sync_world
@@ -289,7 +294,7 @@ fi
 
 # install PMR2
 if [ ! -z "${INSTALL_PMR2}" ]; then
-    envsubst \$DIST_SERVER,\$ZOPE_USER,\$PMR_HOME < "${INSTALL_PMR2}" | SSH_CMD
+    envsubst \$DIST_SERVER,\$ZOPE_USER,\$PMR_HOME,\$PMR_ZEO_BACKUP < "${INSTALL_PMR2}" | SSH_CMD
 fi
 
 # install PMR2 core data
