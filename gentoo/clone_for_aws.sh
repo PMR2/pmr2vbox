@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 VBOX_SATA_DEVICE=${VBOX_SATA_DEVICE:-0}
-UPLOAD_IMG=${UPLOAD_IMG:-"${VBOX_NAME}".vhd}
+UPLOAD_IMG=${UPLOAD_IMG:-"${VBOX_NAME}.vhd"}
 UPLOAD_IMG_PORT=${UPLOAD_IMG_PORT:-1}
 
 alias SSH_CMD="ssh -oStrictHostKeyChecking=no -oBatchMode=Yes -i \"${VBOX_PRIVKEY}\" root@${VBOX_IP}"
@@ -30,10 +30,10 @@ mkfs.ext4 \${UPLOAD_IMG_DEVICE}2
 mkdir -p /mnt/gentoo
 mount \${UPLOAD_IMG_DEVICE}2 /mnt/gentoo
 rsync -raAHXx \\
-    --include=/var/log/{apache,tomcat}*/ \\
-    --include=/var/tmp/tomcat*/ \\
-    --exclude=/etc/ssh/ssh_host* \\
-    --exclude=/{root,proc,sys,dev,mnt,usr/src,usr/portage,usr/local/portage,tmp,var/tmp,var/log,var/log/{apache,tomcat}*,var/lib/portage/distfiles,var/lib/portage/packages,var/cache/{binpkgs,distfiles},var/db/repos,home/*/\\.cache}/* \\
+    --include=var/log/{apache,tomcat}*/ \\
+    --include=var/tmp/tomcat*/ \\
+    --exclude=etc/ssh/ssh_host* \\
+    --exclude={root,proc,sys,dev,mnt,usr/src,usr/portage,usr/local/portage,tmp,var/tmp,var/log,var/log/{apache,tomcat}*,var/lib/portage/distfiles,var/lib/portage/packages,var/cache/{binpkgs,distfiles},var/db/repos,home/*/\\.cache}/* \\
     / /mnt/gentoo/
 mount -t proc proc /mnt/gentoo/proc
 mount -R /dev /mnt/gentoo/dev
