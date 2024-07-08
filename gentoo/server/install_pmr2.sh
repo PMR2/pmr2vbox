@@ -151,7 +151,7 @@ chmod +x /etc/init.d/virtuoso
 # Install PMR2
 
 if ! id -u ${ZOPE_USER} > /dev/null 2>&1; then
-    useradd -m -k /etc/skel ${ZOPE_USER}
+    useradd -m -k /etc/skel -G cron ${ZOPE_USER}
 fi
 
 mkdir -p "${PMR_HOME}"
