@@ -15,7 +15,7 @@ emerge --noreplace \
 # Install Zope.
 
 if ! id -u $CELLML_USER > /dev/null 2>&1; then
-    useradd -m -k /etc/skel $CELLML_USER
+    useradd -m -k /etc/skel -G cron $CELLML_USER
 fi
 
 mkdir -p "${CELLML_HOME}"
@@ -43,7 +43,7 @@ cd cellml.site
 # need to bootstrap a sane virtualenv for python 2
 if [ ! -d bootstrap ]; then
     su ${CELLML_USER} -c "virtualenv bootstrap"
-    su ${CELLML_USER} -c "bootstrap/bin/python -m pip install 'virtualenv<20'"
+    su ${CELLML_USER} -c "bootstrap/bin/python -m pip install 'virtualenv<20' setuptools"
     su ${CELLML_USER} -c "bootstrap/bin/virtualenv . -p /usr/bin/python2.7"
 fi
 # TODO extract setuptools version from the buildout config that has it

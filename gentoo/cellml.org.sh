@@ -64,6 +64,7 @@ if [ $# = 0 ]; then
     # enable all local commands/shortcuts
     CELLML_ORG="${DIR}/server/cellml.org.sh"
     INSTALL_PRODSERVICE="${DIR}/server/install_production_services.sh"
+    CONFIGURE_SERVICE="${DIR}/server/configure_services.sh"
     RESTORE_BACKUP=1
 fi
 
@@ -76,6 +77,10 @@ while [[ $# > 0 ]]; do
             ;;
         --install-production)
             INSTALL_PRODSERVICE="${DIR}/server/install_production_services.sh"
+            shift
+            ;;
+        --configure-services)
+            CONFIGURE_SERVICE="${DIR}/server/configure_services.sh"
             shift
             ;;
         --restore-backup)
@@ -99,6 +104,11 @@ fi
 # install and setup for production
 if [ ! -z "${INSTALL_PRODSERVICE}" ]; then
     envsubst \${BUILDOUT_NAME},\$HOST_FQDN,\$BUILDOUT_ROOT,\$ZOPE_INSTANCE_PORT,\$SITE_ROOT < "${INSTALL_PRODSERVICE}" | SSH_CMD
+fi
+
+# configure production services for usage.
+if [ ! -z "${CONFIGURE_SERVICE}" ]; then
+    envsubst \${BUILDOUT_NAME},\$HOST_FQDN,\$BUILDOUT_ROOT,\$ZOPE_INSTANCE_PORT,\$SITE_ROOT < "${CONFIGURE_SERVICE}" | SSH_CMD
 fi
 
 # restore backup
