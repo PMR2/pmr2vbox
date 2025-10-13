@@ -40,7 +40,12 @@ EOF
 
 cat << EOF > /etc/portage/package.mask/mkl
 # limiting to this version that works (to save disk usage)
->sci-libs/mkl-2020.4.304
+# >sci-libs/mkl-2020.4.304
+EOF
+
+cat << EOF > /etc/portage/package.mask/osmesa
+# masking versions that no longer provide osmesa
+>=media-libs/mesa-25.1
 EOF
 
 cat << EOF > /etc/portage/package.use/mesa
@@ -59,12 +64,11 @@ emerge --sync pmr2-overlay
 emerge --noreplace dev-lang/python:2.7 dev-lang/python:${PYTHON3_VERSION}
 emerge --noreplace net-misc/omniORB::pmr2-overlay \
     dev-build/cmake dev-db/unixODBC \
-    media-libs/mesa media-libs/glu \
+    media-libs/mesa media-libs/glu sci-libs/openblas \
     dev-python/cffi media-libs/openjpeg media-libs/libjpeg-turbo \
     dev-python/virtualenv \
     sci-libs/mkl \
     app-crypt/mit-krb5 \
-    dev-db/virtuoso-odbc::pmr2-overlay \
     dev-db/virtuoso-server::pmr2-overlay \
     dev-db/virtuoso-vad-conductor::pmr2-overlay
 
