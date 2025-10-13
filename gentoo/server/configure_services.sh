@@ -5,13 +5,13 @@ set -e
 
 if [ -f "/etc/init.d/virtuoso" ]; then
     rc-update add virtuoso default
-    # virtuoso had a tendency to kill itself so it need this to help prod it.
-    cat <<- EOF > /etc/cron.d/1virtuoso
-	SHELL=/bin/bash
-	PATH=/sbin:/bin:/usr/sbin:/usr/bin
-	MAILTO=root
-	* * * * * root /etc/init.d/virtuoso status && pgrep virtuoso-t || /etc/init.d/virtuoso restart
-	EOF
+#    # virtuoso had a tendency to kill itself so it need this to help prod it.
+#    cat <<- EOF > /etc/cron.d/1virtuoso
+#	SHELL=/bin/bash
+#	PATH=/sbin:/bin:/usr/sbin:/usr/bin
+#	MAILTO=root
+#	* * * * * root /etc/init.d/virtuoso status && pgrep virtuoso-t || /etc/init.d/virtuoso restart
+#	EOF
 else
     echo "not starting virtuoso by default as it isn't installed"
 fi

@@ -94,6 +94,15 @@ prep_prod () {
 
 	mkdir -p "${PROD_ROOT}"
 	EOF
+
+# TODO need to actually set that up here
+# cat << EOF > /etc/conf.d/pmr2
+# # Default locations
+# INSTANCE_HOME=${PMR_HOME}/pmr2.buildout
+# ZEOSERVER_HOME=${PMR_HOME}/pmr2.buildout
+# BACKUP_DIR=${PMR_ZEO_BACKUP}
+# EOF
+
 }
 
 restore_pmr2_backup () {
