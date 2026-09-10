@@ -50,7 +50,7 @@ EOF
 
 cat << EOF > /etc/portage/package.use/mesa
 # for the opencmiss dependencies.
-media-libs/mesa X osmesa
+media-libs/mesa X osmesa  VIDEO_CARDS: -*
 media-libs/libglvnd X
 EOF
 
@@ -64,7 +64,7 @@ emerge --sync pmr2-overlay
 emerge --noreplace dev-lang/python:2.7 dev-lang/python:${PYTHON3_VERSION}
 emerge --noreplace net-misc/omniORB::pmr2-overlay \
     dev-build/cmake dev-db/unixODBC \
-    media-libs/mesa media-libs/glu sci-libs/openblas \
+    media-libs/mesa::pmr2-overlay media-libs/glu sci-libs/openblas \
     dev-python/cffi media-libs/openjpeg media-libs/libjpeg-turbo \
     dev-python/virtualenv \
     sci-libs/mkl \
