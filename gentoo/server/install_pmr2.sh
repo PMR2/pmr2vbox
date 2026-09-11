@@ -4,7 +4,8 @@ set -e
 # XXX TODO move all paths hardcoded below to here as variables
 ODBC_INI=/etc/unixODBC/odbc.ini
 # Specify the Python 3 used to build the wheel for the opencmiss.zinc package.
-PYTHON3_VERSION="3.9"
+ZINCJS_PY3_VERSION="3.9"
+PYTHON3_VERSION="3.12"
 
 mkdir -p /etc/portage/repos.conf
 
@@ -61,7 +62,9 @@ EOF
 # Installing build and installation dependencies plus Virtuoso
 
 emerge --sync pmr2-overlay
-emerge --noreplace dev-lang/python:2.7 dev-lang/python:${PYTHON3_VERSION}
+emerge --noreplace dev-lang/python:2.7 \
+    dev-lang/python:${PYTHON3_VERSION} \
+    dev-lang/python:${ZINCJS_PY3_VERSION} \
 emerge --noreplace net-misc/omniORB::pmr2-overlay \
     dev-build/cmake dev-db/unixODBC \
     media-libs/mesa::pmr2-overlay media-libs/glu sci-libs/openblas \
@@ -190,7 +193,7 @@ su ${ZOPE_USER} -c "bin/pip install -U zc.buildout==1.7.1 setuptools==36.8.0"
 
 # TODO figure out how to specify options/customize a base set of options
 # su ${ZOPE_USER} -c "bin/buildout -c buildout-git.cfg"
-su ${ZOPE_USER} -c "bin/buildout -c deploy-all.cfg"
+su ${ZOPE_USER} -c "CFLAGS=\"-Wno-incompatible-pointer-types -Wno-format-security -Wno-pedantic-errors -Wno-implicit-function-declaration\" CMAKE_POLICY_VERSION_MINIMUM=3.5 bin/buildout -c deploy-all.cfg"
 
 # ZincJSGroupExporter
 
@@ -200,19 +203,19 @@ if [ ! -d ZincJSGroupExporter ]; then
 fi
 cd ZincJSGroupExporter
 su ${ZOPE_USER} -c "git checkout rebuild"
-su ${ZOPE_USER} -c "virtualenv . -p /usr/bin/python${PYTHON3_VERSION}"
+su ${ZOPE_USER} -c "virtualenv . -p /usr/bin/python${ZINCJS_PY3_VERSION}"
 su ${ZOPE_USER} -c "bin/pip install --no-index --find-links=https://dist.physiomeproject.org opencmiss.zinc"
 su ${ZOPE_USER} -c "bin/pip install -e ."
 
 # opencmiss.exporter
-
+# FIXME incomplete - need to get exact versions and patch the broken import
 cd "${PMR_HOME}"
 if [ ! -d "opencmiss.zinc" ]; then
     su ${ZOPE_USER} -c "mkdir opencmiss.zinc"
 fi
 cd "opencmiss.zinc"
 su ${ZOPE_USER} -c "virtualenv . -p /usr/bin/python${PYTHON3_VERSION}"
-su ${ZOPE_USER} -c "bin/pip install --no-index --find-links=https://dist.physiomeproject.org opencmiss.zinc"
+su ${ZOPE_USER} -c "bin/pip install --no-index --find-links=https://dist.physiomeproject.org cmlibs.zinc"
 su ${ZOPE_USER} -c "bin/pip install opencmiss.exporter[thumbnail_software] sparc-converter sparc-dataset-tools"
 
 # flatmap SDS archive datamaker
@@ -224,8 +227,6 @@ fi
 cd "flatmap-datamaker"
 su ${ZOPE_USER} -c "virtualenv . -p /usr/bin/python${PYTHON3_VERSION}"
 su ${ZOPE_USER} -c "bin/pip install -U https://github.com/dbrnz/flatmap-datamaker/releases/download/0.1.0/datamaker-0.1.0-py3-none-any.whl"
-# Workaround broken certificate verify issue in 1.7.2 (or potentially later?)
-su ${ZOPE_USER} -c "bin/pip install -U pygit2==1.7.1"
 
 # store key locations in conf.d
 
