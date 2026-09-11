@@ -18,16 +18,16 @@ priority = 50
 auto-sync = Yes
 EOF
 
+mkdir -p /etc/portage/package.accept_keywords
+mkdir -p /etc/portage/package.mask
+mkdir -p /etc/portage/package.use
+mkdir -p /etc/portage/package.license
+
 cat << EOF > /etc/portage/package.use/pmr2
 # required by dev-db/virtuoso-server-6.1.6::pmr2-overlay
 # required by dev-db/virtuoso-server::pmr2-overlay (argument)
 sys-libs/zlib minizip
 EOF
-
-mkdir -p /etc/portage/package.accept_keywords
-mkdir -p /etc/portage/package.mask
-mkdir -p /etc/portage/package.use
-mkdir -p /etc/portage/package.license
 
 cat << EOF > /etc/portage/package.accept_keywords/pmr2
 # omniORB
