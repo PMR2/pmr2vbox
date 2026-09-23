@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+cat << EOF > /etc/portage/package.use/apache
+www-servers/apache  APACHE2_MODULES: brotli
+EOF
+
 emerge --noreplace \
     mail-mta/postfix \
     www-servers/apache
