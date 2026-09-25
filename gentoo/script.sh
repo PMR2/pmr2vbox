@@ -261,6 +261,10 @@ while [[ $# > 0 ]]; do
             INSTALL_PMR2_COREDATA="${DIR}/server/install_pmr2_coredata.sh"
             shift
             ;;
+        --install-pmrplatform)
+            INSTALL_PMRPLATFORM="${DIR}/server/install_pmrplatform.sh"
+            shift
+            ;;
         --install-morre)
             INSTALL_MORRE="${DIR}/server/install_morre.sh"
             shift
@@ -288,6 +292,10 @@ while [[ $# > 0 ]]; do
             ;;
         --post-install-reindex)
             POSTINSTALL_REINDEX="${DIR}/server/postinstall_reindex.sh"
+            shift
+            ;;
+        --post-install-migrate-to-pmrplatform)
+            POSTINSTALL_PMRPLATFORM_FROM_PMR2="${DIR}/server/postinstall_pmrplatform_from_pmr2.sh"
             shift
             ;;
         *)
@@ -334,6 +342,11 @@ if [ ! -z "${INSTALL_BIVES}" ]; then
     envsubst \$DIST_SERVER,\$TOMCAT_VERSION,\$TOMCAT_USER < "${INSTALL_BIVES}" | SSH_CMD
 fi
 
+# install pmrplatform
+if [ ! -z "${INSTALL_PMRPLATFORM}" ]; then
+    envsubst \$DIST_SERVER,\$ZOPE_USER,\$PMR_HOME,\$PMR_ZEO_BACKUP < "${INSTALL_PMRPLATFORM}" | SSH_CMD
+fi
+
 # install additional services used in production
 if [ ! -z "${INSTALL_PRODSERVICE}" ]; then
     envsubst \$DIST_SERVER < "${INSTALL_PRODSERVICE}" | SSH_CMD
@@ -359,6 +372,10 @@ fi
 
 if [ ! -z "${POSTINSTALL_REINDEX}" ]; then
     envsubst \$ZOPE_USER,\$PMR_HOME < "${POSTINSTALL_REINDEX}" | SSH_CMD
+fi
+
+if [ ! -z "${POSTINSTALL_PMRPLATFORM_FROM_PMR2}" ]; then
+    envsubst \$ZOPE_USER,\$PMR_HOME < "${POSTINSTALL_PMRPLATFORM_FROM_PMR2}" | SSH_CMD
 fi
 
 # XXX make this cleanup run regardless.
