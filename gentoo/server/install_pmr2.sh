@@ -203,7 +203,7 @@ if [ ! -d ZincJSGroupExporter ]; then
 fi
 cd ZincJSGroupExporter
 su ${ZOPE_USER} -c "git checkout rebuild"
-su ${ZOPE_USER} -c "virtualenv . -p /usr/bin/python${ZINCJS_PY3_VERSION}"
+su ${ZOPE_USER} -c "virtualenv . -p /usr/bin/python${ZINCJS_PY3_VERSION} --pip 21.3.1 --setuptools 57.0.0"
 su ${ZOPE_USER} -c "bin/pip install --no-index --find-links=https://dist.physiomeproject.org opencmiss.zinc"
 su ${ZOPE_USER} -c "bin/pip install -e ."
 
