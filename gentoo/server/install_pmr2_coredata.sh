@@ -2,6 +2,8 @@
 # XXX this script assumes vboxtools has been used to "activate" a
 # VirtualBox control environment.
 
+set -e
+
 if [ ! -f /var/lib/virtuoso/db/.pmr2_schema ]; then
     # TODO figure out a better location than this?
     DB=/var/lib/virtuoso/db
