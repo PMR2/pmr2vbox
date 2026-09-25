@@ -127,7 +127,7 @@ restore_pmr2_backup () {
         fi
 
         SSH_CMD <<- EOF
-        prod_root_mounted=\$(mount | grep /opt/zope)
+        prod_root_mounted=\$(mount | grep ${PROD_ROOT})
         if [ -z "\${prod_root_mounted}" ]; then
             parted --script "${DATA_DEVICE}" \\
                 mklabel gpt \\
