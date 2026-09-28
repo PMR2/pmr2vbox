@@ -9,6 +9,11 @@ PYTHON3_VERSION="3.12"
 
 mkdir -p /etc/portage/repos.conf
 
+cat << EOF > /etc/security/limits.conf
+*               soft    nofile             100000
+*               hard    nofile             101000
+EOF
+
 cat << EOF > /etc/portage/repos.conf/pmr2-overlay.conf
 [pmr2-overlay]
 location = /var/db/repos/pmr2-overlay
