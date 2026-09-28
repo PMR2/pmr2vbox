@@ -14,6 +14,15 @@ VBoxManage storageattach "${VBOX_NAME}" --storagectl SATA \
 
 sleep 1
 
+NAMED_PROD_ROOT="${1}"
+
+if [[ -n "${NAMED_PROD_ROOT}" ]]; then
+    NAMED_FSTAB_LINE="LABEL=\"pmrdata\"\t${NAMED_PROD_ROOT}\text4\trw,noatime\t0 0"
+    NAMED_FSTAB_CMD="echo -e '${NAMED_FSTAB_LINE}' >> /mnt/gentoo/etc/fstab"
+else
+    NAMED_FSTAB_CMD=""
+fi;
+
 SSH_CMD << EOF
 while true; do
     check=\$(ls -crt /dev/disk/by-id/ |tail -n1 |grep -v part)
@@ -44,6 +53,7 @@ grub-install --root-directory=/mnt/gentoo \${UPLOAD_IMG_DEVICE}
 root_uuid=\$(findmnt -n -r -o UUID /)
 mnt_gentoo_uuid=\$(findmnt -n -r -o UUID /mnt/gentoo)
 sed -i "s/\${root_uuid}/\${mnt_gentoo_uuid}/" /mnt/gentoo/etc/fstab
+${NAMED_FSTAB_CMD}
 chroot /mnt/gentoo rc-update add amazon-ec2 boot
 umount -R /mnt/gentoo
 EOF
