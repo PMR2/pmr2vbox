@@ -65,6 +65,8 @@ sync_world () {
 	EOF
 }
 
+# The goal of this function is to prepare the image for production usage, where a separate data partition
+# will be mounted at ${PROD_ROOT} provides the underlying data.
 prep_prod () {
     SSH_CMD <<- EOF
 	if [ ! -L "${PMR_HOME}/pmr2.buildout/var/filestorage/" ]; then
@@ -88,6 +90,8 @@ prep_prod () {
 	fi
 
 	if [ ! -L "/var/lib/virtuoso/db" ]; then
+	    # Backup the virtuoso.ini one level up, in the event this may be needed later.
+	    mv /var/lib/virtuoso/db/virtuoso.ini /var/lib/virtuoso/virtuoso.ini.bak
 	    rm -rf /var/lib/virtuoso/db
 	    ln -s "${PROD_ROOT}/var/lib/virtuoso/db" /var/lib/virtuoso/db
 	fi
@@ -185,6 +189,14 @@ restore_pmr2_backup () {
             mkdir -p "${PROD_ROOT}/var/lib/virtuoso"
             mv /var/lib/virtuoso/db/ "${PROD_ROOT}/var/lib/virtuoso/"
             ln -s "${PROD_ROOT}/var/lib/virtuoso/db" /var/lib/virtuoso/db
+        else
+            # Ensure this dir is available if the link already exists, and move the backed up ini file
+            # into the expected location, if this image was originally prepared for production before any
+            # data was present.
+            mkdir -p "${PROD_ROOT}/var/lib/virtuoso/db"
+            if [ -f /var/lib/virtuoso/virtuoso.ini.bak ]; then
+                mv /var/lib/virtuoso/virtuoso.ini.bak "${PROD_ROOT}/var/lib/virtuoso/db/virtuoso.ini"
+            fi
         fi
 	EOF
 
@@ -224,6 +236,9 @@ restore_pmr2_backup () {
 	    "bin/repozo -R -r \"${PMR_ZEO_BACKUP}\" -o var/filestorage/Data.fs"
 	EOF
 
+    # This would flag the creation of the seed Virtuoso with data required.
+    INSTALL_PMR2_COREDATA="${DIR}/server/install_pmr2_coredata.sh"
+    # The reindex step will be executed after core data is restored.
     POSTINSTALL_REINDEX="${DIR}/server/postinstall_reindex.sh"
 }
 
@@ -327,11 +342,6 @@ if [ ! -z "${INSTALL_PMR2}" ]; then
     envsubst \$DIST_SERVER,\$ZOPE_USER,\$PMR_HOME,\$PMR_ZEO_BACKUP < "${INSTALL_PMR2}" | SSH_CMD
 fi
 
-# install PMR2 core data
-if [ ! -z "${INSTALL_PMR2_COREDATA}" ]; then
-    envsubst \$DIST_SERVER,\$ZOPE_USER,\$PMR_HOME < "${INSTALL_PMR2_COREDATA}" | SSH_CMD
-fi
-
 # install Morre
 if [ ! -z "${INSTALL_MORRE}" ]; then
     envsubst \$DIST_SERVER,\$JARS_SERVER,\$MORRE_USER,\$MORRE_HOME,\$NEO4J_VERSION < "${INSTALL_MORRE}" | SSH_CMD
@@ -368,6 +378,13 @@ else
     if [ ! -z "${SETUP_AS_PROD}" ]; then
         prep_prod
     fi
+fi
+
+# Install PMR2 core data, which currently are data in virtuoso.  This step is moved here
+# as the `restore_pmr2_backup` may correct for a previously issued `prep_prod` step that
+# removed virtuoso db.
+if [ ! -z "${INSTALL_PMR2_COREDATA}" ]; then
+    envsubst \$DIST_SERVER,\$ZOPE_USER,\$PMR_HOME < "${INSTALL_PMR2_COREDATA}" | SSH_CMD
 fi
 
 if [ ! -z "${POSTINSTALL_REINDEX}" ]; then
